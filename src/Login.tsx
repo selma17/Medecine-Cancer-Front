@@ -78,8 +78,9 @@ const LoginForm: React.FC = () => {
                 background: "rgba(255,255,255,0.15)",
                 display: "flex", alignItems: "center", justifyContent: "center"
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
+                  <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
                 </svg>
               </div>
               <span style={{ color: "white", fontSize: "18px", fontWeight: "600", letterSpacing: "1px" }}>CANCER IA</span>

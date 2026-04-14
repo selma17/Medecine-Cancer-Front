@@ -110,15 +110,39 @@ const LandingPage = () => {
         </div>
         <div className="landing-features-grid">
           {[
-            { icon: "👥", title: "Gestion des patients", desc: "Centralisez les dossiers patients, consultez l'historique des examens et suivez l'évolution des analyses." },
-            { icon: "📋", title: "Saisie des examens", desc: "Formulaires structurés pour la mammographie et l'échographie avec calcul automatique du score BI-RADS." },
-            { icon: "🤖", title: "Analyse IA", desc: "Intelligence artificielle pour estimer le score BI-RADS, la probabilité de malignité et la conduite à tenir." },
-            { icon: "📄", title: "Rapports automatiques", desc: "Génération automatique de comptes rendus médicaux structurés et exportables en PDF." },
-            { icon: "🔒", title: "Accès sécurisé", desc: "Authentification sécurisée avec gestion des rôles. Chaque médecin accède uniquement à ses données." },
-            { icon: "📈", title: "Historique & suivi", desc: "Consultez l'historique complet des examens et suivez l'évolution des patients dans le temps." },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+              title: "Gestion des patients", 
+              desc: "Centralisez les dossiers patients, consultez l'historique des examens et suivez l'évolution des analyses." 
+            },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>,
+              title: "Saisie des examens", 
+              desc: "Formulaires structurés pour la mammographie et l'échographie avec calcul automatique du score BI-RADS." 
+            },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>,
+              title: "Analyse IA", 
+              desc: "Intelligence artificielle pour estimer le score BI-RADS, la probabilité de malignité et la conduite à tenir." 
+            },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+              title: "Rapports automatiques", 
+              desc: "Génération automatique de comptes rendus médicaux structurés et exportables en PDF." 
+            },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+              title: "Accès sécurisé", 
+              desc: "Authentification sécurisée avec gestion des rôles. Chaque médecin accède uniquement à ses données." 
+            },
+            { 
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+              title: "Historique & suivi", 
+              desc: "Consultez l'historique complet des examens et suivez l'évolution des patients dans le temps." 
+            },
           ].map((f, i) => (
             <div className="feature-card" key={i}>
-              <div className="feature-icon">{f.icon}</div>
+              <div className="feature-icon-wrapper">{f.icon}</div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
             </div>

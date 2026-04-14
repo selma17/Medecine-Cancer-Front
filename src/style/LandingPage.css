@@ -285,8 +285,14 @@
   transition: transform 0.2s;
 }
 .feature-card:hover { transform: translateY(-4px); }
-.feature-icon {
-  font-size: 28px;
+.feature-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  background: #E6F1FB;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
 }
 .feature-card h3 {
@@ -376,13 +382,13 @@
   }
   .landing-nav-links a { display: none; }
   /* Force scroll landing page */
-  html body:has(.landing-wrapper) {
-    overflow: visible !important;
-    height: auto !important;
-  }
+html body:has(.landing-wrapper) {
+  overflow: visible !important;
+  height: auto !important;
+}
 
-  html:has(.landing-wrapper) {
-    overflow: visible !important;
-    height: auto !important;
-  }
+html:has(.landing-wrapper) {
+  overflow: visible !important;
+  height: auto !important;
+}
 }
