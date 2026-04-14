@@ -375,4 +375,14 @@
     align-items: center;
   }
   .landing-nav-links a { display: none; }
+  /* Force scroll landing page */
+  html body:has(.landing-wrapper) {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  html:has(.landing-wrapper) {
+    overflow: visible !important;
+    height: auto !important;
+  }
 }
