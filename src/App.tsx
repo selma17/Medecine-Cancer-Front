@@ -40,7 +40,7 @@ function App() {
         <Route path="/formtwo" element={<FormTwo />} />
         <Route path="/formthree" element={<FormThree />} />
         <Route path="/formfour" element={<StepFour />} />
-        <Route path="/*" element={<MainApp />} />
+        <Route path="/add-patient" element={<MainApp />} />
       </Routes>
     </Router>
   );

@@ -178,7 +178,7 @@ const PatientManagement: React.FC = () => {
                   />
                 </div>
                 {/* Add button */}
-                <button onClick={() => navigate(ROUTES.FORM_ONE)}
+                <button onClick={() => navigate(ROUTES.ADD_PATIENT)}
                   style={{ padding: "8px 16px", background: "#1B2B6B", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontFamily: "inherit" }}
                   onMouseEnter={(e) => e.currentTarget.style.background = "#243d8f"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "#1B2B6B"}
