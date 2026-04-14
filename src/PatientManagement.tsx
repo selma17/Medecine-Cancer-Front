@@ -1,342 +1,316 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './PatientManagement.css';
 import { useAuth } from './hooks/useAuth';
 import { ROUTES } from './navigation/navigationConfig';
 import { getAllPatients, deleteScan, Patient } from './services/patientService';
 import { toast } from 'sonner';
-import ReturnIcon from './icons/return';
 
 const PatientManagement: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const itemsPerPage = 10;
 
-  // Charger les patients depuis le backend
-  useEffect(() => {
-    loadPatients();
-  }, []);
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const doctorName = user?.nom || "Docteur";
+
+  useEffect(() => { loadPatients(); }, []);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const loadPatients = async () => {
     try {
       setLoading(true);
       setError(null);
-      const patientsData = await getAllPatients();
-      setPatients(patientsData);
-    } catch (err) {
-      console.error('Erreur lors du chargement des patients:', err);
-      setError('Erreur lors du chargement des patients. Veuillez réessayer.');
-      toast.error('Erreur lors du chargement des patients ❌');
+      const data = await getAllPatients();
+      setPatients(data);
+    } catch {
+      setError('Erreur lors du chargement des patients.');
+      toast.error('Erreur lors du chargement des patients');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNouveauPatient = () => {
-    navigate(ROUTES.FORM_ONE);
-  };
-
-  const handleViewPatient = (patientId: string) => {
+  const handleDelete = async (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    if (patient && patient.scanId) {
-      // Navigation vers la page de détails avec le scanId
-      navigate(ROUTES.FORM_THREE, { state: { scanId: patient.scanId } });
-    } else {
-      toast.error('Impossible de trouver les détails du patient ❌');
-    }
-  };
-
-  const handleDeletePatient = async (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
-    if (!patient || !patient.scanId) {
-      toast.error('Impossible de supprimer ce patient ❌');
-      return;
-    }
-
-    // Confirmation avant suppression
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le patient ${patient.nom} ${patient.prenom} ?`)) {
-      return;
-    }
-
+    if (!patient?.scanId) return;
+    if (!window.confirm(`Supprimer ${patient.nom} ${patient.prenom} ?`)) return;
     try {
       await deleteScan(patient.scanId);
-      toast.success('Patient supprimé avec succès ✅');
-      // Recharger la liste des patients
+      toast.success('Patient supprimé');
       await loadPatients();
-      // Retirer de la sélection si sélectionné
-      setSelectedPatients(prev => prev.filter(id => id !== patientId));
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
-      toast.error('Erreur lors de la suppression du patient ❌');
+    } catch {
+      toast.error('Erreur lors de la suppression');
     }
   };
 
-  const handleSelectPatient = (patientId: string) => {
-    setSelectedPatients(prev => 
-      prev.includes(patientId) 
-        ? prev.filter(id => id !== patientId)
-        : [...prev, patientId]
-    );
+  const handleView = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    if (patient?.scanId) {
+      navigate(ROUTES.FORM_THREE, { state: { scanId: patient.scanId } });
+    } else {
+      toast.error('Impossible de trouver les détails');
+    }
   };
 
-  const filteredPatients = patients.filter(patient =>
-    `${patient.nom} ${patient.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = patients.filter(p =>
+    `${p.nom} ${p.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const current = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const navItems = [
+    { label: "Tableau de bord", route: ROUTES.DASHBOARD, active: false, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
+    { label: "Patients", route: ROUTES.PATIENT_HISTORY, active: true, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { label: "Nouvel examen", route: ROUTES.ADD_PATIENT, active: false, icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+  ];
+
+  const SidebarContent = () => (
+    <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", height: "100vh" }}>
+      <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
+              <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
+            </svg>
+          </div>
+          <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "1px" }}>CANCER IA</span>
+        </div>
+      </div>
+      <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#4A90D9", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: "600", flexShrink: 0 }}>
+            {doctorName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p style={{ color: "white", fontSize: "13px", fontWeight: "500", margin: 0 }}>Dr. {doctorName}</p>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", margin: 0 }}>Radiologue</p>
+          </div>
+        </div>
+      </div>
+      <nav style={{ padding: "1rem 0", flex: 1 }}>
+        {navItems.map((item, i) => (
+          <div key={i} onClick={() => { navigate(item.route); setSidebarOpen(false); }}
+            style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 1.5rem", cursor: "pointer", background: item.active ? "rgba(255,255,255,0.1)" : "transparent", borderLeft: item.active ? "3px solid #4A90D9" : "3px solid transparent", color: item.active ? "white" : "rgba(255,255,255,0.6)", fontSize: "14px", transition: "all 0.2s", marginBottom: "4px" }}
+            onMouseEnter={(e) => { if (!item.active) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; }}}
+            onMouseLeave={(e) => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}}
+          >
+            {item.icon}<span>{item.label}</span>
+          </div>
+        ))}
+      </nav>
+      <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <button onClick={logout} style={{ width: "100%", padding: "10px", background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", fontFamily: "inherit" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </aside>
   );
 
-  // Calculs de pagination
-  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPatients = filteredPatients.slice(startIndex, endIndex);
-
-  const handleSelectAll = () => {
-    const currentPagePatientIds = currentPatients.map(p => p.id);
-    const allCurrentSelected = currentPagePatientIds.every(id => selectedPatients.includes(id));
-    
-    if (allCurrentSelected) {
-      // Désélectionner tous les patients de la page actuelle
-      setSelectedPatients(prev => prev.filter(id => !currentPagePatientIds.includes(id)));
-    } else {
-      // Sélectionner tous les patients de la page actuelle
-      setSelectedPatients(prev => {
-        const newSelection = [...prev];
-        currentPagePatientIds.forEach(id => {
-          if (!newSelection.includes(id)) {
-            newSelection.push(id);
-          }
-        });
-        return newSelection;
-      });
-    }
-  };
-
-  // Réinitialiser la page quand la recherche change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  // Fonctions de pagination
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
+  const getAcrColor = (acr: string) => {
+    if (acr === '-' || !acr) return { bg: "#EEF2F7", color: "#64748b" };
+    const num = parseInt(acr);
+    if (num <= 2) return { bg: "#F0FDF4", color: "#16a34a" };
+    if (num === 3) return { bg: "#FFFBEB", color: "#d97706" };
+    return { bg: "#FFF1F2", color: "#e11d48" };
   };
 
   return (
-    <div className="patient-management-container">
-      {/* Header avec logo */}
-      <header className="pm-header">
-        <div className="header-left">
-          <div className="logo-container">
-            <div className="logo-icon">🎗️</div>
-            <h1 className="logo-text">Cancer IA !</h1>
-          </div>
-        </div>
-        
-        <div className="header-right">
-          <button className="logout-btn" onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i>
-            Déconnexion
-          </button>
-        </div>
-      </header>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#EEF2F7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
-      {/* Bannière de gestion des patients */}
-      <div className="pm-banner">
-        <div className="banner-content">
-          <button className="banner-return-btn" onClick={() => navigate(ROUTES.DASHBOARD)}>
-            <ReturnIcon />
-          </button>
-          <h2 className="banner-title">Gestion des patients</h2>
-          <div className="banner-ribbon">🎗️</div>
-        </div>
+      {/* Sidebar desktop */}
+      <div className="sidebar-desktop-wrapper">
+        <SidebarContent />
       </div>
 
-      {/* Section principale */}
-      <main className="pm-main">
-        <div className="pm-content">
-          {/* En-tête de la liste */}
-          <div className="list-header">
-            <h3 className="list-title">Liste des patients</h3>
-            
-            <div className="list-controls">
-              <div className="search-container">
-                <i className="fas fa-search search-icon"></i>
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Tout rechercher par nom"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <button className="create-patient-btn" onClick={handleNouveauPatient}>
-                <i className="fas fa-plus"></i>
-                Créer un patient
-              </button>
+      {/* Sidebar mobile */}
+      {sidebarOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex" }}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setSidebarOpen(false)} />
+          <div style={{ position: "relative", zIndex: 51 }}><SidebarContent /></div>
+        </div>
+      )}
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+
+        {/* HEADER */}
+        <header style={{ background: "white", padding: "1rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button className="burger-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", background: "none", border: "none", cursor: "pointer" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B2B6B" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div>
+              <h1 style={{ fontSize: "18px", fontWeight: "600", color: "#1B2B6B", margin: 0 }}>Gestion des patients</h1>
+              <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>{filtered.length} patient{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}</p>
             </div>
           </div>
+          <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#1B2B6B", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: "600" }}>
+            {doctorName.charAt(0).toUpperCase()}
+          </div>
+        </header>
 
-          {/* Tableau des patients */}
-          <div className="patients-table">
-            <div className="table-header">
-              <div className="header-checkbox">
-                <input
-                  type="checkbox"
-                  checked={currentPatients.length > 0 && selectedPatients.length === currentPatients.length}
-                  onChange={handleSelectAll}
-                />
+        <main style={{ padding: "2rem", flex: 1 }}>
+          <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", animation: "fadeInUp 0.4s ease both" }}>
+
+            {/* Toolbar */}
+            <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#1B2B6B", margin: 0 }}>Liste des patients</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                {/* Search */}
+                <div style={{ position: "relative" }}>
+                  <svg style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input
+                    type="text"
+                    placeholder="Rechercher par nom..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ padding: "8px 12px 8px 38px", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "14px", width: "240px", outline: "none", fontFamily: "inherit" }}
+                    onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                    onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                  />
+                </div>
+                {/* Add button */}
+                <button onClick={() => navigate(ROUTES.FORM_ONE)}
+                  style={{ padding: "8px 16px", background: "#1B2B6B", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontFamily: "inherit" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#243d8f"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "#1B2B6B"}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Nouveau patient
+                </button>
               </div>
-              <div className="header-name">Nom et Prénom</div>
-              <div className="header-acr">ACR</div>
-              <div className="header-type">Type</div>
-              <div className="header-actions">Actions</div>
             </div>
 
-            <div className="table-body">
-              {loading ? (
-                <div className="loading-message">
-                  <i className="fas fa-spinner fa-spin"></i>
-                  Chargement des patients...
-                </div>
-              ) : error ? (
-                <div className="error-message">
-                  <i className="fas fa-exclamation-triangle"></i>
-                  {error}
-                  <button onClick={loadPatients} className="retry-btn">
-                    Réessayer
-                  </button>
-                </div>
-              ) : filteredPatients.length === 0 ? (
-                <div className="empty-message">
-                  <i className="fas fa-inbox"></i>
-                  Aucun patient trouvé
-                </div>
-              ) : (
-                currentPatients.map((patient) => (
-                <div key={patient.id} className="table-row">
-                  <div className="row-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedPatients.includes(patient.id)}
-                      onChange={() => handleSelectPatient(patient.id)}
-                    />
-                  </div>
-                  <div className="row-name">
-                    {patient.nom} {patient.prenom}
-                  </div>
-                  <div className="row-acr">{patient.acr}</div>
-                  <div className="row-type">{patient.type}</div>
-                  <div className="row-actions">
-                    <button
-                      className="action-btn view-btn"
-                      onClick={() => handleViewPatient(patient.id)}
-                      title="Voir les détails"
-                    >
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={() => handleDeletePatient(patient.id)}
-                      title="Supprimer"
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-                ))
-              )}
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 120px", padding: "12px 2rem", background: "#F8FAFC", borderBottom: "1px solid #e2e8f0" }}>
+              {["Nom et Prénom", "ACR", "Type", "Actions"].map((h, i) => (
+                <div key={i} style={{ fontSize: "12px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: i > 0 ? "center" : "left" }}>{h}</div>
+              ))}
             </div>
+
+            {/* Table body */}
+            {loading ? (
+              <div style={{ padding: "4rem", textAlign: "center" }}>
+                <div style={{ width: "32px", height: "32px", border: "3px solid #EEF2F7", borderTop: "3px solid #1B2B6B", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 1rem" }}/>
+                <p style={{ color: "#64748b", fontSize: "14px" }}>Chargement des patients...</p>
+              </div>
+            ) : error ? (
+              <div style={{ padding: "4rem", textAlign: "center" }}>
+                <p style={{ color: "#e11d48", fontSize: "14px", marginBottom: "1rem" }}>{error}</p>
+                <button onClick={loadPatients} style={{ padding: "8px 20px", background: "#1B2B6B", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "inherit" }}>Réessayer</button>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ padding: "4rem", textAlign: "center" }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" style={{ marginBottom: "1rem" }}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <p style={{ color: "#64748b", fontSize: "14px" }}>Aucun patient trouvé</p>
+              </div>
+            ) : (
+              current.map((patient, i) => {
+                const acrStyle = getAcrColor(patient.acr);
+                return (
+                  <div key={patient.id} style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 120px", padding: "1rem 2rem", borderBottom: "1px solid #f1f5f9", alignItems: "center", transition: "background 0.15s", animation: `fadeInUp 0.3s ease ${i * 0.05}s both` }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#F8FAFC"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "white"}
+                  >
+                    {/* Nom */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#EEF2F7", display: "flex", alignItems: "center", justifyContent: "center", color: "#1B2B6B", fontSize: "12px", fontWeight: "600", flexShrink: 0 }}>
+                        {patient.nom.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: "14px", fontWeight: "500", color: "#1e293b" }}>
+                        {patient.nom} {patient.prenom}
+                      </span>
+                    </div>
+                    {/* ACR */}
+                    <div style={{ textAlign: "center" }}>
+                      <span style={{ background: acrStyle.bg, color: acrStyle.color, padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
+                        {patient.acr || "—"}
+                      </span>
+                    </div>
+                    {/* Type */}
+                    <div style={{ textAlign: "center", fontSize: "13px", color: "#64748b" }}>
+                      {patient.type || "—"}
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
+                      <button onClick={() => handleView(patient.id)}
+                        style={{ width: "34px", height: "34px", background: "#EEF2F7", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#1B2B6B"; (e.currentTarget.firstChild as SVGElement).style.stroke = "white"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "#EEF2F7"; (e.currentTarget.firstChild as SVGElement).style.stroke = "#1B2B6B"; }}
+                        title="Voir les détails"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1B2B6B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <button onClick={() => handleDelete(patient.id)}
+                        style={{ width: "34px", height: "34px", background: "#FFF1F2", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#e11d48"; (e.currentTarget.firstChild as SVGElement).style.stroke = "white"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "#FFF1F2"; (e.currentTarget.firstChild as SVGElement).style.stroke = "#e11d48"; }}
+                        title="Supprimer"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
 
             {/* Pagination */}
-            {!loading && !error && filteredPatients.length > 0 && totalPages > 1 && (
-              <div className="pagination-container">
-                <div className="pagination-info">
-                  Affichage {startIndex + 1}-{Math.min(endIndex, filteredPatients.length)} sur {filteredPatients.length} patients
-                </div>
-                <div className="pagination-controls">
-                  <button
-                    className="pagination-btn"
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="fas fa-chevron-left"></i>
+            {!loading && !error && totalPages > 1 && (
+              <div style={{ padding: "1.25rem 2rem", borderTop: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+                <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+                  {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, filtered.length)} sur {filtered.length}
+                </p>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                    style={{ padding: "6px 12px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "white", cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.5 : 1, fontSize: "13px", fontFamily: "inherit" }}>
                     Précédent
                   </button>
-                  
-                  <div className="pagination-numbers">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                      // Afficher seulement quelques pages autour de la page actuelle
-                      if (
-                        page === 1 ||
-                        page === totalPages ||
-                        (page >= currentPage - 2 && page <= currentPage + 2)
-                      ) {
-                        return (
-                          <button
-                            key={page}
-                            className={`pagination-number ${currentPage === page ? 'active' : ''}`}
-                            onClick={() => handlePageChange(page)}
-                          >
-                            {page}
-                          </button>
-                        );
-                      } else if (
-                        page === currentPage - 3 ||
-                        page === currentPage + 3
-                      ) {
-                        return (
-                          <span key={page} className="pagination-ellipsis">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-                  
-                  <button
-                    className="pagination-btn"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1).map((p, i, arr) => (
+                    <React.Fragment key={p}>
+                      {i > 0 && arr[i - 1] !== p - 1 && <span style={{ padding: "6px 4px", fontSize: "13px", color: "#94a3b8" }}>…</span>}
+                      <button onClick={() => setCurrentPage(p)}
+                        style={{ width: "34px", height: "34px", border: "1px solid #e2e8f0", borderRadius: "8px", background: currentPage === p ? "#1B2B6B" : "white", color: currentPage === p ? "white" : "#1e293b", cursor: "pointer", fontSize: "13px", fontFamily: "inherit" }}>
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))}
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                    style={{ padding: "6px 12px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "white", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.5 : 1, fontSize: "13px", fontFamily: "inherit" }}>
                     Suivant
-                    <i className="fas fa-chevron-right"></i>
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
+
+      <style>{`
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .sidebar-desktop-wrapper { display: flex; }
+        .burger-btn { display: none !important; }
+        @media (max-width: 768px) {
+          .sidebar-desktop-wrapper { display: none !important; }
+          .burger-btn { display: block !important; }
+          main { padding: 1rem !important; }
+          header { padding: 1rem !important; }
+        }
+        @media (max-width: 640px) {
+          .sidebar-desktop-wrapper { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default PatientManagement; 
+export default PatientManagement;
