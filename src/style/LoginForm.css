@@ -10,8 +10,6 @@
 }
 
 html, body {
-  overflow: hidden; /* ✅ empêche tout scroll (horizontal et vertical) */
-  height: 100vh;
   margin: 0;
   padding: 0;
 }
