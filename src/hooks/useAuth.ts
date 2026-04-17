@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -26,35 +27,13 @@ export const useAuth = () => {
   }, []);
 
   const login = async (nom: string, password: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ nom, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Nom ou mot de passe incorrect !");
-      }
-
-      const data = await response.json();
-      
-      // Stocker le token et les informations utilisateur
-      localStorage.setItem('authToken', data.token || 'dummy-token');
-      localStorage.setItem('user', JSON.stringify(data));
-      
-      setUser(data);
-      setIsAuthenticated(true);
-      
-      // Rediriger vers le dashboard
-      navigate("/dashboard");
-      
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, error: error as Error };
-    }
+    const response = await axios.post(`${API_BASE_URL}/api/users/login`, { nom, password });
+    const { token, id, nom: userName, prenom } = response.data;
+    
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('user', JSON.stringify({ id, nom: userName, prenom }));
+    
+    return response.data;
   };
 
   const logout = () => {
