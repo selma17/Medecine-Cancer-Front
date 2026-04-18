@@ -17,9 +17,14 @@ const AddPatientForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/clients/enregistrer`, {
-        nom, prenom, renseignementsCliniques: renseignements,
-      });
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const medecinId = user?.id;
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/clients/enregistrer?medecinId=${medecinId}`,
+        { nom, prenom, renseignementsCliniques: renseignements }
+      );
       setClientId(response.data.id);
       toast.success("Patient enregistré avec succès !");
       navigate("/formone");
