@@ -26,18 +26,15 @@ const LoginForm: React.FC = () => {
         toast.error(err.message || "Erreur lors de la création du compte");
       }
     } else {
-      try {
-        const result = await login(nom, password);
-        if (result.success) {
+        try {
+          await login(nom, password);
           toast.success("Connexion réussie !");
-        } else {
-          toast.error(result.error?.message || "Nom ou mot de passe incorrect");
+          // navigate vers dashboard géré dans useAuth ou ici
+        } catch (error: unknown) {
+          const err = error as Error;
+          toast.error(err.message || "Nom ou mot de passe incorrect");
         }
-      } catch (error: unknown) {
-        const err = error as Error;
-        toast.error(err.message || "Erreur de connexion");
       }
-    }
   };
 
   return (

@@ -35,6 +35,8 @@ export const useAuth = () => {
     setUser({ id: String(id), nom: userName, prenom });
     setIsAuthenticated(true);
 
+    navigate('/dashboard');
+
     return response.data;
   };
 
