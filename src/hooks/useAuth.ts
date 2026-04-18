@@ -6,7 +6,7 @@ import axios from 'axios';
 interface User {
   id: string;
   nom: string;
-  // Ajoutez d'autres propriétés selon votre API
+  prenom: string;
 }
 
 export const useAuth = () => {
@@ -16,12 +16,11 @@ export const useAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté (par exemple, token dans localStorage)
     const token = localStorage.getItem('authToken');
-    if (token) {
-      // Ici vous pouvez vérifier la validité du token avec votre API
+    const userStr = localStorage.getItem('user');
+    if (token && userStr) {
       setIsAuthenticated(true);
-      // Récupérer les informations de l'utilisateur si nécessaire
+      setUser(JSON.parse(userStr));
     }
     setLoading(false);
   }, []);
@@ -29,43 +28,30 @@ export const useAuth = () => {
   const login = async (nom: string, password: string) => {
     const response = await axios.post(`${API_BASE_URL}/api/users/login`, { nom, password });
     const { token, id, nom: userName, prenom } = response.data;
-    
+
     localStorage.setItem('authToken', token);
     localStorage.setItem('user', JSON.stringify({ id, nom: userName, prenom }));
-    
+
+    setUser({ id: String(id), nom: userName, prenom });
+    setIsAuthenticated(true);
+
     return response.data;
   };
 
   const logout = () => {
-    // Supprimer les données d'authentification
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    
     setUser(null);
     setIsAuthenticated(false);
-    
-    // Rediriger vers la page de connexion
     navigate("/");
   };
 
   const register = async (nom: string, prenom: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ nom, prenom, password }),
+      const response = await axios.post(`${API_BASE_URL}/api/users/register`, {
+        nom, prenom, password
       });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || "Erreur lors de la création du compte !");
-      }
-
-      const data = await response.json();
-      
-      return { success: true, data };
+      return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: error as Error };
     }
@@ -90,4 +76,4 @@ export const useAuth = () => {
     logout,
     checkAuth,
   };
-}; 
+};
