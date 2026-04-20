@@ -92,7 +92,7 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
             ""
           );
           setAcrType(scan.acrType || "");
-          setAcrScore(scan.acrScore || ""); // ✅ NOUVEAU : Récupérer le score ACR
+          setAcrScore(scan.conclusionIA || ""); // ✅ NOUVEAU : Récupérer le score ACR
           
           // ✅ NOUVEAU : Transformer les données pour le compte rendu médical
           const transformedData = transformScanDataForReport(scan);

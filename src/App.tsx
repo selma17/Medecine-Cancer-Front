@@ -10,37 +10,29 @@ import FormOne from "./FormOne";
 import FormTwo from "./FormTwo";
 import StepFour from "./FormFour";
 import FormThree from "./FormThree";
+import Finalisation from "./Finalisation";
 
 function App() {
   return (
     <Router>
       <Toaster richColors position="top-center" />
       <Routes>
-        {/* Landing page publique */}
         <Route path="/" element={<LandingPage />} />
-
-        {/* Page de connexion */}
         <Route path="/login" element={<LoginForm />} />
-
-        {/* Dashboard après connexion */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
-
-        {/* Gestion des patients */}
         <Route path="/patient-management" element={
-          <ProtectedRoute>
-            <PatientManagement />
-          </ProtectedRoute>
+          <ProtectedRoute><PatientManagement /></ProtectedRoute>
         } />
-
         <Route path="/formone" element={<FormOne />} />
         <Route path="/formtwo" element={<FormTwo />} />
         <Route path="/formthree" element={<FormThree />} />
         <Route path="/formfour" element={<StepFour />} />
         <Route path="/add-patient" element={<MainApp />} />
+        <Route path="/finalisation" element={
+          <ProtectedRoute><Finalisation /></ProtectedRoute>
+        } />
       </Routes>
     </Router>
   );
