@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -110,7 +111,7 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
         });
     }
   }, [scanId]);
-  
+
   const handleSubmit = () => {
     navigate("/finalisation", { state: { scanId } });
   };
