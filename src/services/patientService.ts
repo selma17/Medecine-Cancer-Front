@@ -39,36 +39,46 @@ export interface ClientResponse {
 // Récupère les patients du médecin connecté
 export const getAllPatients = async (): Promise<Patient[]> => {
   try {
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    const medecinId = user?.id;
-
-    if (!medecinId) return [];
-
-    // Récupérer les clients du médecin
+    // 1. Récupérer les clients du médecin
     const clientsResponse = await axios.get<ClientResponse[]>(
-      `${BASE_URL}/api/clients/by-medecin`
+      `${API_BASE_URL}/clients/by-medecin`
     );
     const clients = clientsResponse.data;
-
     if (!clients || clients.length === 0) return [];
 
-    // Pour chaque client, récupérer ses scans
-    const allScans = await axios.get<MammaryScanResponse[]>(
-      `${BASE_URL}/api/mammary-scan/all`
+    // 2. Récupérer tous les scans
+    const scansResponse = await axios.get<MammaryScanResponse[]>(
+      `${API_BASE_URL}/mammary-scan/all`
+    );
+    const allScans = scansResponse.data;
+
+    // 3. Construire un Set des IDs clients du médecin
+    const clientIds = new Set(clients.map((c) => c.id));
+
+    // 4. Filtrer les scans appartenant aux clients du médecin
+    const myScans = allScans.filter(
+      (scan) => scan.client && clientIds.has(scan.client.id)
     );
 
-    // Filtrer les scans appartenant aux clients du médecin
-    const clientIds = new Set(clients.map(c => c.id));
-    const filteredScans = allScans.data.filter(
-      scan => scan.client && clientIds.has(scan.client.id)
-    );
+    // 5. Si aucun scan, afficher quand même les clients sans scan
+    if (myScans.length === 0) {
+      return clients.map((client) => ({
+        id: `client-${client.id}`,
+        nom: client.nom,
+        prenom: client.prenom,
+        acr: '-',
+        type: '-',
+        clientId: client.id,
+        dateCreation: new Date().toISOString(),
+      }));
+    }
 
-    const patients: Patient[] = filteredScans.map((scan) => ({
+    // 6. Transformer les scans en patients
+    const patients: Patient[] = myScans.map((scan) => ({
       id: `scan-${scan.id}`,
       nom: scan.client?.nom || 'N/A',
       prenom: scan.client?.prenom || 'N/A',
-      acr: scan.acrScore || '-',
+      acr: scan.acrScore || scan.conclusionIA || '-',
       type: scan.acrType || '-',
       scanId: scan.id,
       clientId: scan.client?.id,
@@ -77,7 +87,7 @@ export const getAllPatients = async (): Promise<Patient[]> => {
 
     return patients.sort((a, b) => (b.scanId || 0) - (a.scanId || 0));
   } catch (error) {
-    console.error('Erreur lors de la récupération des patients:', error);
+    console.error('Erreur:', error);
     throw error;
   }
 };
