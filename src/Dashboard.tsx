@@ -9,6 +9,7 @@ const Dashboard: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [statsData, setStatsData] = useState({
     totalPatients: '—',
     examensThisMonth: '—',
@@ -23,6 +24,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setStatsLoading(true);
         // Récupérer les clients du médecin
         const clientsRes = await axios.get(`${API_BASE_URL}/api/clients/by-medecin`);
         const clients = clientsRes.data;
@@ -59,6 +61,8 @@ const Dashboard: React.FC = () => {
         });
       } catch (error) {
         console.error('Erreur stats:', error);
+      } finally {
+        setStatsLoading(false);
       }
     };
 
@@ -171,7 +175,11 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 2px" }}>{stat.label}</p>
-                  <p style={{ fontSize: "22px", fontWeight: "600", color: stat.color, margin: 0 }}>{stat.value}</p>
+                  <p style={{ fontSize: "22px", fontWeight: "600", color: stat.color, margin: 0 }}>{statsLoading ? (
+                    <div style={{ width: "20px", height: "20px", border: "2px solid #EEF2F7", borderTop: `2px solid ${stat.color}`, borderRadius: "50%", animation: "spin 1s linear infinite" }}/>
+                  ) : (
+                    stat.value
+                  )}</p>
                 </div>
               </div>
             ))}
@@ -234,6 +242,7 @@ const Dashboard: React.FC = () => {
           main { padding: 1rem !important; }
           header { padding: 1rem !important; }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
