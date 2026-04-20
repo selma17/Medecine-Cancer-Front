@@ -5,6 +5,7 @@ import LoginForm from "./Login";
 import LandingPage from "./LandingPage";
 import Dashboard from "./Dashboard";
 import PatientManagement from "./PatientManagement";
+import NotFound from "./NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FormOne from "./FormOne";
 import FormTwo from "./FormTwo";
@@ -33,6 +34,7 @@ function App() {
         <Route path="/finalisation" element={
           <ProtectedRoute><Finalisation /></ProtectedRoute>
         } />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
