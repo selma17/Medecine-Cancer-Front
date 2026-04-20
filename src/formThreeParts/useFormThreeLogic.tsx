@@ -10,13 +10,12 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   const [conclusionIA, setConclusionIA] = useState<string>("");
   const [conduiteIA, setConduiteIA] = useState<string>("");
-  // ✅ NOUVEAU : justification détaillée de l'IA (optionnelle)
+  
   const [justificationIA, setJustificationIA] = useState<string>("");
   const [acrType, setAcrType] = useState<string>("");
   const [acrScore, setAcrScore] = useState<string>(""); // ✅ NOUVEAU : Score ACR
   const [loadingIA, setLoadingIA] = useState<boolean>(true);
   
-  // ✅ NOUVEAUX : États pour le compte rendu médical
   const [scanData, setScanData] = useState<any>(null);
   const [showMedicalReport, setShowMedicalReport] = useState<boolean>(false);
 
@@ -26,7 +25,6 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     { title: "Conclusion", status: "in-progress" as const },
   ];
 
-  // ✅ NOUVELLE FONCTION : Transformer les données de l'API pour le compte rendu
   const transformScanDataForReport = (scan: any) => {
     return {
       scanId: scan.id?.toString(),
@@ -112,9 +110,9 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
         });
     }
   }, [scanId]);
-
+  
   const handleSubmit = () => {
-    navigate("/finalisation");
+    navigate("/finalisation", { state: { scanId } });
   };
 
   // ✅ NOUVEAUX : Fonctions pour le compte rendu médical
