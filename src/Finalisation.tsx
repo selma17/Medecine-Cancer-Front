@@ -130,6 +130,14 @@ const Finalisation: React.FC = () => {
     return map[score] || "#64748b";
   };
 
+  const extractConduite = (conduite: string) => {
+    const actions = ["Surveillance", "Biopsie", "Ablation chirurgicale", "Traitement médical"];
+    for (const action of actions) {
+      if (conduite?.includes(action)) return action;
+    }
+    return conduite;
+  };
+
   return (
     <>
       <style>{`
@@ -219,7 +227,7 @@ const Finalisation: React.FC = () => {
                   <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "1.25rem", textAlign: "center" }}>
                     <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 6px", textTransform: "uppercase" }}>Conduite</p>
                     <p style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B", margin: 0 }}>
-                      {scanData.resultats.conduiteATenir || "—"}
+                      {extractConduite(scanData.resultats.conduiteATenir || "")}
                     </p>
                   </div>
 
