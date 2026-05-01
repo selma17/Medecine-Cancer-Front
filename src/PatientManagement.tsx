@@ -306,9 +306,13 @@ const PatientManagement: React.FC = () => {
                         style={{ width: "34px", height: "34px", background: "#EEF2F7", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "#1B2B6B"; (e.currentTarget.firstChild as SVGElement).style.stroke = "white"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "#EEF2F7"; (e.currentTarget.firstChild as SVGElement).style.stroke = "#1B2B6B"; }}
-                        title="Voir les détails"
+                        title="Voir le compte rendu"
                       >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1B2B6B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {loadingReport ? (
+                          <div style={{ width: "14px", height: "14px", border: "2px solid #EEF2F7", borderTop: "2px solid #1B2B6B", borderRadius: "50%", animation: "spin 1s linear infinite" }}/>
+                        ) : (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1B2B6B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        )}
                       </button>
                       <button onClick={() => handleDelete(patient.id)}
                         style={{ width: "34px", height: "34px", background: "#FFF1F2", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
