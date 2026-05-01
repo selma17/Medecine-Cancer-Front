@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { ROUTES } from './navigation/navigationConfig';
 import { getAllPatients, deleteScan, Patient } from './services/patientService';
 import { toast } from 'sonner';
+import MedicalReport from './formThreeParts/MedicalReport';
+import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 const PatientManagement: React.FC = () => {
   const { logout } = useAuth();
@@ -15,6 +19,9 @@ const PatientManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const itemsPerPage = 10;
+  const [showReport, setShowReport] = useState(false);
+  const [reportScanData, setReportScanData] = useState<any>(null);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -50,12 +57,66 @@ const PatientManagement: React.FC = () => {
     }
   };
 
-  const handleView = (patientId: string) => {
+  const handleView = async (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    if (patient?.scanId) {
-      navigate(ROUTES.FORM_THREE, { state: { scanId: patient.scanId } });
-    } else {
-      toast.error('Impossible de trouver les détails');
+    if (!patient?.scanId) {
+      toast.error('Aucun examen disponible pour ce patient');
+      return;
+    }
+    try {
+      setLoadingReport(true);
+      const response = await axios.get(`${API_BASE_URL}/api/mammary-scan/${patient.scanId}`);
+      const scan = response.data;
+      setReportScanData({
+        scanId: scan.id?.toString(),
+        clientInfo: scan.client ? {
+          nom: scan.client.nom,
+          prenom: scan.client.prenom,
+          renseignementsCliniques: scan.client.renseignementsCliniques
+        } : null,
+        mammographie: {
+          densiteMammaire: scan.densiteMammaire,
+          masses: scan.massesMammographie?.map((m: any) => ({
+            localisation: m.localisation,
+            forme: m.forme,
+            contours: m.contours,
+            densite: m.densite,
+            distanceCentre: m.distanceCentre,
+            sein: m.sein,
+          })) || [],
+          asymetrie: scan.asymetrie,
+          typeAsymetrie: scan.typeAsymetrie,
+          distorsionArchitecturale: scan.distorsionArchitecturale,
+          calcifications: scan.calcifications,
+          typesCalcifications: scan.typesCalcifications,
+          signesAssocies: scan.signesAssociesMammographie || []
+        },
+        echographie: {
+          echostructureMammaire: scan.echostructureMammaire,
+          masses: scan.massesEchostructure?.map((m: any) => ({
+            localisation: m.localisation,
+            mesure: m.mesure,
+            forme: m.forme,
+            contours: m.contours,
+            densite: m.densite,
+            orientation: m.orientation,
+            comportement: m.comportementDesFaisceauxUltrasons,
+            calcifications: m.calcifications,
+          })) || [],
+          signesAssocies: scan.signesAssociesEchostructure || []
+        },
+        resultats: {
+          acrScore: scan.conclusionIA,
+          acrType: scan.acrType,
+          conclusionIA: scan.conclusionIA,
+          conduiteATenir: scan.conduiteATenir,
+        }
+      });
+      setShowReport(true);
+    } catch {
+      toast.error('Erreur lors du chargement du compte rendu');
+    } finally {
+      setLoadingReport(false);
     }
   };
 
@@ -293,7 +354,13 @@ const PatientManagement: React.FC = () => {
           </div>
         </main>
       </div>
-
+      {reportScanData && (
+        <MedicalReport
+          isOpen={showReport}
+          onClose={() => setShowReport(false)}
+          scanData={reportScanData}
+        />
+      )}
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
