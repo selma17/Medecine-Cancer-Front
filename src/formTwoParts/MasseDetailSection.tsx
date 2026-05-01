@@ -1,5 +1,4 @@
 import React from "react";
-import BreastSchema from "../components/BreastSchema";
 
 interface Props {
   index: number;
@@ -43,52 +42,70 @@ const MasseDetailSection: React.FC<Props> = ({
   onMassesDataChange,
 }) => {
   const handleRadioChange = (
-    type: "forme" | "contour" | "densite" | "orientation" | "comportement" | "calcification", 
+    type: "forme" | "contour" | "densite" | "orientation" | "comportement" | "calcification",
     value: string
   ) => {
     onMassesDataChange(index, type, value);
   };
 
-  const handleLocalisationChange = (value: string) => {
-    onLocalisationChange(index, value);
-  };
-
-  const handleDistanceCentreChange = (value: string) => {
-    onDistanceCentreChange(index, value);
-  };
-
-  const handleMesureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onMesureChange(index, e.target.value);
-  };
-
   return (
     <div className="additional-section border rounded-lg mt-4 p-4">
-      {/* Schéma mammaire avec localisation */}
-      <BreastSchema
-        localisation={localisation}
-        distanceCentre={distanceCentre}
-        sein={sein}
-        onLocalisationChange={handleLocalisationChange}
-        onDistanceCentreChange={handleDistanceCentreChange}
-        onSeinChange={(value) => onSeinChange(index, value)}
-      />
+
+      {/* Localisation */}
+      <div className="form-radio-section">
+        <p className="form-label">Localisation</p>
+        <input
+          type="text"
+          value={localisation}
+          onChange={(e) => onLocalisationChange(index, e.target.value)}
+          className="form-input"
+          placeholder="ex: 2H, QSID, UQSD..."
+        />
+      </div>
+
+      {/* Distance du mamelon */}
+      <div className="form-radio-section mt-4">
+        <p className="form-label">Distance du mamelon (cm)</p>
+        <input
+          type="text"
+          value={distanceCentre}
+          onChange={(e) => onDistanceCentreChange(index, e.target.value)}
+          className="form-input"
+          placeholder="ex: 2"
+        />
+      </div>
+
+      {/* Sein */}
+      <div className="form-radio-section mt-4">
+        <p className="form-label">Sein</p>
+        {["gauche", "droite"].map((s) => (
+          <label key={s} className="radio-label">
+            <input
+              type="radio"
+              name={`sein-${index}`}
+              checked={sein === s}
+              onChange={() => onSeinChange(index, s as "gauche" | "droite")}
+            />
+            {s}
+          </label>
+        ))}
+      </div>
 
       {/* Mesure */}
-      <label className="form-label mt-4">Mesure {index + 1} (mm)</label>
-      <input
-        type="text"
-        value={mesure}
-        onChange={handleMesureChange}
-        className="form-input"
-        placeholder="Ex: 15x20"
-      />
+      <div className="form-radio-section mt-4">
+        <p className="form-label">Mesure {index + 1} (mm)</p>
+        <input
+          type="text"
+          value={mesure}
+          onChange={(e) => onMesureChange(index, e.target.value)}
+          className="form-input"
+          placeholder="ex: 15x20"
+        />
+      </div>
 
       {/* Forme */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">
-          Forme de la masse 
-          <span className="text-red-500 ml-1">*</span>
-        </p>
+        <p className="form-label">Forme de la masse <span className="text-red-500 ml-1">*</span></p>
         {["ovale", "ronde", "irrégulière"].map((f) => (
           <label key={f} className="radio-label">
             <input
@@ -105,10 +122,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Contours */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">
-          Contours 
-          <span className="text-red-500 ml-1">*</span>
-        </p>
+        <p className="form-label">Contours <span className="text-red-500 ml-1">*</span></p>
         {["circonscrits", "indistincts", "anguleux", "microlobulés", "spiculés"].map((c) => (
           <label key={c} className="radio-label">
             <input
@@ -125,10 +139,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Densité */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">
-          Densité 
-          <span className="text-red-500 ml-1">*</span>
-        </p>
+        <p className="form-label">Densité <span className="text-red-500 ml-1">*</span></p>
         {["haute", "isoéchogène", "hypoéchogène", "anéchogène", "complexe"].map((d) => (
           <label key={d} className="radio-label">
             <input
@@ -158,7 +169,8 @@ const MasseDetailSection: React.FC<Props> = ({
           </label>
         ))}
       </div>
-      
+
+      {/* Comportement */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Comportement</p>
         {["neutre", "renforcement postérieur", "atténuation postérieure", "combiné"].map((comp) => (
@@ -193,15 +205,11 @@ const MasseDetailSection: React.FC<Props> = ({
       {/* Indicateur de validation */}
       {localisation && forme && contour && densite ? (
         <div className="mt-4 p-2 bg-green-100 border border-green-300 rounded">
-          <p className="text-green-700 text-sm">
-            ✅ Masse {index + 1} complète
-          </p>
+          <p className="text-green-700 text-sm">✅ Masse {index + 1} complète</p>
         </div>
       ) : (
         <div className="mt-4 p-2 bg-orange-100 border border-orange-300 rounded">
-          <p className="text-orange-700 text-sm">
-            ⚠️ Masse {index + 1} : Remplissez la localisation, forme, contours et densité
-          </p>
+          <p className="text-orange-700 text-sm">⚠️ Masse {index + 1} : Remplissez la localisation, forme, contours et densité</p>
         </div>
       )}
     </div>

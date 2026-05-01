@@ -8,6 +8,8 @@ import { useScanStore } from "./store/useScanStore";
 const AddPatientForm: React.FC = () => {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
+  const [dateNaissance, setDateNaissance] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [renseignements, setRenseignements] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const AddPatientForm: React.FC = () => {
 
       const response = await axios.post(
         `${API_BASE_URL}/api/clients/enregistrer?medecinId=${medecinId}`,
-        { nom, prenom, renseignementsCliniques: renseignements }
+        { nom, prenom, dateNaissance, telephone, renseignementsCliniques: renseignements }
       );
       setClientId(response.data.id);
       toast.success("Patient enregistré avec succès !");
@@ -40,20 +42,24 @@ const AddPatientForm: React.FC = () => {
   const user = userStr ? JSON.parse(userStr) : null;
   const doctorName = user?.nom || "Docteur";
 
+  const inputStyle = {
+    width: "100%", boxSizing: "border-box" as const,
+    padding: "10px 14px", fontSize: "14px",
+    border: "1px solid #e2e8f0", borderRadius: "8px",
+    outline: "none", fontFamily: "inherit", transition: "border-color 0.2s"
+  };
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#EEF2F7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
-      <div style={{ width: "100%", maxWidth: "520px", animation: "fadeInUp 0.4s ease both" }}>
+      <div style={{ width: "100%", maxWidth: "560px", animation: "fadeInUp 0.4s ease both" }}>
 
-        {/* Back button */}
         <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "14px", marginBottom: "1.5rem", padding: 0, fontFamily: "inherit" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           Retour
         </button>
 
-        {/* Card */}
         <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
 
-          {/* Header */}
           <div style={{ background: "#1B2B6B", padding: "1.75rem 2rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -71,51 +77,60 @@ const AddPatientForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} style={{ padding: "2rem" }}>
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Nom *</label>
-              <input
-                type="text"
-                placeholder="ex: Ben Ali"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                required
-                style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", fontSize: "14px", border: "1px solid #e2e8f0", borderRadius: "8px", outline: "none", fontFamily: "inherit", transition: "border-color 0.2s" }}
-                onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
-                onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
-              />
+
+            {/* Nom + Prénom sur la même ligne */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Nom *</label>
+                <input type="text" placeholder="ex: Ben Ali" value={nom}
+                  onChange={(e) => setNom(e.target.value)} required style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Prénom *</label>
+                <input type="text" placeholder="ex: Sonia" value={prenom}
+                  onChange={(e) => setPrenom(e.target.value)} required style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
             </div>
 
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Prénom *</label>
-              <input
-                type="text"
-                placeholder="ex: Sonia"
-                value={prenom}
-                onChange={(e) => setPrenom(e.target.value)}
-                required
-                style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", fontSize: "14px", border: "1px solid #e2e8f0", borderRadius: "8px", outline: "none", fontFamily: "inherit", transition: "border-color 0.2s" }}
-                onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
-                onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
-              />
+            {/* Date de naissance + Téléphone sur la même ligne */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Date de naissance *</label>
+                <input type="date" value={dateNaissance}
+                  onChange={(e) => setDateNaissance(e.target.value)} required style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Téléphone</label>
+                <input type="tel" placeholder="ex: 22 690 725" value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)} style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
             </div>
 
+            {/* Renseignements cliniques */}
             <div style={{ marginBottom: "1.75rem" }}>
               <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Renseignements cliniques *</label>
-              <textarea
-                placeholder="Antécédents médicaux, motif de consultation..."
-                value={renseignements}
-                onChange={(e) => setRenseignements(e.target.value)}
-                required
-                rows={4}
-                style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px", fontSize: "14px", border: "1px solid #e2e8f0", borderRadius: "8px", outline: "none", fontFamily: "inherit", resize: "vertical", transition: "border-color 0.2s" }}
+              <textarea placeholder="Antécédents médicaux, motif de consultation..."
+                value={renseignements} onChange={(e) => setRenseignements(e.target.value)}
+                required rows={4}
+                style={{ ...inputStyle, resize: "vertical" }}
                 onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
                 onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
               />
             </div>
 
-            {/* Info */}
             <div style={{ background: "#E6F1FB", borderRadius: "8px", padding: "10px 14px", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               <p style={{ fontSize: "12px", color: "#185FA5", margin: 0 }}>Après enregistrement, vous serez redirigé vers le formulaire d'examen mammographique.</p>
@@ -127,15 +142,9 @@ const AddPatientForm: React.FC = () => {
               onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "#1B2B6B"; }}
             >
               {loading ? (
-                <>
-                  <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid white", borderRadius: "50%", animation: "spin 1s linear infinite" }}/>
-                  Enregistrement...
-                </>
+                <><div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid white", borderRadius: "50%", animation: "spin 1s linear infinite" }}/>Enregistrement...</>
               ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                  Enregistrer le patient
-                </>
+                <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>Enregistrer le patient</>
               )}
             </button>
           </form>
@@ -145,9 +154,6 @@ const AddPatientForm: React.FC = () => {
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 640px) {
-          div[style*="padding: 2rem"] { padding: 1rem !important; }
-        }
       `}</style>
     </div>
   );

@@ -1,5 +1,4 @@
 import React from "react";
-import BreastSchema from "../components/BreastSchema";
 
 interface Props {
   massNumber: string;
@@ -31,12 +30,7 @@ const MassesSection: React.FC<Props> = ({
   contours,
   densites,
   handleMassesDataChange,
-  hoveredOption,
-  setHoveredOption,
 }) => {
-
-  const handleHover = (value: string) => setHoveredOption(value);
-  const handleLeave = () => setHoveredOption("");
 
   return (
     <>
@@ -55,16 +49,42 @@ const MassesSection: React.FC<Props> = ({
       {[...Array(Number(massNumber) || 0)].map((_, index) => (
         <div key={index} className="dynamic-section">
           {/* Schéma mammaire avec localisation */}
+          {/* Remplace BreastSchema par des inputs simples */}
           <div className="content">
             <p className="title">Localisation de la masse {index + 1}</p>
-            <BreastSchema
-              localisation={localisations[index] || ""}
-              distanceCentre={distancesCentre[index] || ""}
-              sein={seins[index] || "gauche"}
-              onLocalisationChange={(value) => handleLocalisationChange(index, value)}
-              onDistanceCentreChange={(value) => handleDistanceCentreChange(index, value)}
-              onSeinChange={(value) => handleSeinChange(index, value)}
+            <input
+              type="text"
+              placeholder="ex: 2H, QSID, UQSD..."
+              value={localisations[index] || ""}
+              onChange={(e) => handleLocalisationChange(index, e.target.value)}
+              className="text-input"
             />
+          </div>
+          <div className="content">
+            <p className="title">Distance du mamelon (cm)</p>
+            <input
+              type="text"
+              placeholder="ex: 2"
+              value={distancesCentre[index] || ""}
+              onChange={(e) => handleDistanceCentreChange(index, e.target.value)}
+              className="text-input"
+            />
+          </div>
+          <div className="content">
+            <p className="title">Sein</p>
+            <div className="options">
+              {["gauche", "droite"].map((s) => (
+                <label key={s} className="checkbox-label">
+                  <input
+                    type="radio"
+                    name={`sein-${index}`}
+                    checked={seins[index] === s}
+                    onChange={() => handleSeinChange(index, s as "gauche" | "droite")}
+                  />
+                  {s}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Forme */}

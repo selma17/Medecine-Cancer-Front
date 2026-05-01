@@ -37,11 +37,6 @@ const DensiteSection: React.FC<Props> = ({
           </label>
         ))}
       </div>
-      {hoveredOption && (
-        <div className="image-preview">
-          <img src={`/${hoveredOption}.png`} alt={`Option ${hoveredOption}`} />
-        </div>
-      )}
     </div>
   );
 };
