@@ -8,6 +8,11 @@ interface Props {
   setHoveredOption: (value: string) => void;
 }
 
+const distortionImages: { [key: string]: string } = {
+  "centre claire": "/claire.png",
+  "centre dence": "/dense.png",
+};
+
 const DistortionSection: React.FC<Props> = ({
   distortion,
   handleDistortionChange,
@@ -15,29 +20,20 @@ const DistortionSection: React.FC<Props> = ({
   hoveredOption,
   setHoveredOption,
 }) => {
-  const handleHover = (value: string) => setHoveredOption(value);
-  const handleLeave = () => setHoveredOption("");
-
   return (
     <>
       <div className="content">
         <p className="title">Distorsion architecturale</p>
         <div className="options">
-          <label className="checkbox-label">
-            <input
-              type="radio"
-              name="distortion"
-              value="oui"
+          <label className="radio-label">
+            <input type="radio" name="distortion" value="oui"
               checked={distortion === "oui"}
               onChange={() => handleDistortionChange("oui")}
             />
             Oui
           </label>
-          <label className="checkbox-label">
-            <input
-              type="radio"
-              name="distortion"
-              value="non"
+          <label className="radio-label">
+            <input type="radio" name="distortion" value="non"
               checked={distortion === "non"}
               onChange={() => handleDistortionChange("non")}
             />
@@ -50,30 +46,43 @@ const DistortionSection: React.FC<Props> = ({
         <div className="content">
           <p className="title">Options de distorsion architecturale</p>
           <div className="options">
-            <label
-              className={`checkbox-label ${hoveredOption === "centre claire" ? "hovered" : ""}`}
-              onMouseEnter={() => handleHover("centre claire")}
-              onMouseLeave={handleLeave}
-            >
-              <input type="checkbox" value="centre claire" />
-              Centre claire
-            </label>
-            <label
-              className={`checkbox-label ${hoveredOption === "centre dence" ? "hovered" : ""}`}
-              onMouseEnter={() => handleHover("centre dence")}
-              onMouseLeave={handleLeave}
-            >
-              <input type="checkbox" value="centre dence" />
-              Centre dense
-            </label>
+            {["centre claire", "centre dence"].map((option) => (
+              <div
+                key={option}
+                style={{ position: "relative" }}
+                onMouseEnter={() => setHoveredOption(option)}
+                onMouseLeave={() => setHoveredOption("")}
+              >
+                <label className="checkbox-label">
+                  <input type="checkbox" value={option} />
+                  {option === "centre claire" ? "Centre claire" : "Centre dense"}
+                </label>
+                {hoveredOption === option && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    zIndex: 100,
+                    background: "white",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "6px",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                    marginTop: "4px"
+                  }}>
+                    <img
+                      src={distortionImages[option]}
+                      alt={option}
+                      style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
+                    />
+                    <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
+                      {option}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-
-          {hoveredOption && (
-            <div className="additional-content">
-              {hoveredOption === "centre claire" && <img src="/claire.png" alt="Centre claire" />}
-              {hoveredOption === "centre dence" && <img src="/dense.png" alt="Centre dense" />}
-            </div>
-          )}
         </div>
       )}
     </>

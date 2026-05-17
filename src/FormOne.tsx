@@ -50,7 +50,7 @@ const FormOne: React.FC = () => {
           background: white;
           border-radius: 16px;
           border: 1px solid #e2e8f0;
-          overflow: hidden;
+          overflow: visible;
           margin-bottom: 1.5rem;
         }
         .form1-card-header {

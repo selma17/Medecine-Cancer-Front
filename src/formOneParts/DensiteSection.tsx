@@ -7,34 +7,64 @@ interface Props {
   handleCheckboxChange: (value: string) => void;
 }
 
+const densiteImages: { [key: string]: string } = {
+  "A": "/A.png",
+  "B": "/B.png",
+  "C": "/C.png",
+  "D": "/D.png",
+};
+
 const DensiteSection: React.FC<Props> = ({
   selected,
   hoveredOption,
   setHoveredOption,
   handleCheckboxChange,
 }) => {
-  const handleOptionHover = (option: string) => setHoveredOption(option);
-  const handleOptionLeave = () => setHoveredOption("");
-
   return (
     <div className="content">
       <p className="title">Densité mammaire</p>
-      <div className="options">
+      <div className="options" style={{ flexWrap: "wrap" }}>
         {["A", "B", "C", "D"].map((option) => (
-          <label
+          <div
             key={option}
-            className={`checkbox-label ${hoveredOption === option ? "hovered" : ""}`}
-            onMouseEnter={() => handleOptionHover(option)}
-            onMouseLeave={handleOptionLeave}
+            style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredOption(option)}
+            onMouseLeave={() => setHoveredOption("")}
           >
-            <input
-              type="checkbox"
-              value={option}
-              checked={selected.includes(option)}
-              onChange={() => handleCheckboxChange(option)}
-            />
-            {option}
-          </label>
+            <label className="checkbox-label">
+              <input
+                type="radio"
+                name="densiteMammaire"
+                value={option}
+                checked={selected.includes(option)}
+                onChange={() => handleCheckboxChange(option)}
+              />
+              {option}
+            </label>
+            {hoveredOption === option && densiteImages[option] && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                zIndex: 100,
+                background: "white",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                padding: "6px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                marginTop: "4px"
+              }}>
+                <img
+                  src={densiteImages[option]}
+                  alt={`Densité ${option}`}
+                  style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
+                />
+                <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
+                  Densité {option}
+                </p>
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>
