@@ -24,25 +24,25 @@ interface Props {
 }
 
 const formesData = [
-  { value: "ovale", image: "/echo-forme-ovale.png" },
-  { value: "ronde", image: "/echo-forme-ronde.png" },
-  { value: "irrégulière", image: "/echo-forme-irreguliere.png" },
+  { value: "ovale", image: "/forme-ovale.png" },
+  { value: "ronde", image: "/forme-ronde.png" },
+  { value: "irrégulière", image: "/forme-irreguliere.png" },
 ];
 
 const contoursData = [
-  { value: "circonscrits", image: "/echo-contour-circonscrits.png" },
-  { value: "indistincts", image: "/echo-contour-indistincts.png" },
-  { value: "anguleux", image: "/echo-contour-anguleux.png" },
-  { value: "microlobulés", image: "/echo-contour-microlobules.png" },
-  { value: "spiculés", image: "/echo-contour-spicules.png" },
+  { value: "circonscrits", image: "/contour-circonscrits.png" },
+  { value: "indistincts", image: "/contour-indistincts.png" },
+  { value: "anguleux", image: "/iregg.png" },
+  { value: "microlobulés", image: "/contour-microlobules.png" },
+  { value: "spiculés", image: "/contour-spicules.png" },
 ];
 
 const densitesData = [
-  { value: "haute", image: "/echo-densite-haute.png" },
-  { value: "isoéchogène", image: "/echo-densite-isoechogende.png" },
-  { value: "hypoéchogène", image: "/echo-densite-hypoechogende.png" },
-  { value: "anéchogène", image: "/echo-densite-anechogende.png" },
-  { value: "complexe", image: "/echo-densite-complexe.png" },
+  { value: "haute", image: "/hight.png" },
+  { value: "isoéchogène", image: "/equal.png" },
+  { value: "hypoéchogène", image: "/low.png" },
+  { value: "anéchogène", image: "/opal.png" },
+  { value: "complexe", image: "/med.jpg" },
 ];
 
 const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
