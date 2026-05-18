@@ -146,13 +146,12 @@ const FormOne: React.FC = () => {
           </button>
           <div style={{ width: "1px", height: "20px", background: "#e2e8f0" }}/>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#1B2B6B", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
-                <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B" }}>Cancer IA</span>
+            <img
+              src="/logo-octobre-rose.png"
+              alt="Logo"
+              style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "6px" }}
+            />
+            <span style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B" }}>Breast AI Report</span>
           </div>
         </div>
 
@@ -179,33 +178,39 @@ const FormOne: React.FC = () => {
                 setHoveredOption={logic.setHoveredOption}
                 handleCheckboxChange={logic.handleCheckboxChange}
               />
+
+              {/* ✅ MassesSection — sans distancesCentre */}
               <MassesSection
                 massNumber={logic.massNumber}
                 setMassNumber={logic.setMassNumber}
                 localisations={logic.localisations}
-                distancesCentre={logic.distancesCentre}
                 seins={logic.seins}
                 handleLocalisationChange={logic.handleLocalisationChange}
-                handleDistanceCentreChange={logic.handleDistanceCentreChange}
                 handleSeinChange={logic.handleSeinChange}
                 formes={logic.formes}
                 contours={logic.contours}
                 densites={logic.densites}
                 handleMassesDataChange={logic.handleMassesDataChange}
               />
+
               <AsymmetrySection
                 asymmetry={logic.asymmetry}
                 handleAsymmetryChange={logic.handleAsymmetryChange}
                 asymmetryDetails={logic.asymmetryDetails}
                 handleAsymmetryDetailsChange={logic.handleAsymmetryDetailsChange}
               />
+
+              {/* ✅ DistortionSection — avec les 2 nouvelles props */}
               <DistortionSection
                 distortion={logic.distortion}
                 handleDistortionChange={logic.handleDistortionChange}
                 showDistortionOptions={logic.showDistortionOptions}
+                distortionOption={logic.distortionOption}
+                handleDistortionOptionChange={logic.handleDistortionOptionChange}
                 hoveredOption={logic.hoveredOption}
                 setHoveredOption={logic.setHoveredOption}
               />
+
               <CalcificationSection
                 calcifications={logic.calcifications}
                 handleCalcificationsChange={logic.handleCalcificationsChange}
@@ -221,6 +226,7 @@ const FormOne: React.FC = () => {
                 distributionMicrocalcifications={logic.distributionMicrocalcifications}
                 handleDistributionChange={logic.handleDistributionChange}
               />
+
               <SignsSection
                 signsAssociated={logic.signsAssociated}
                 handleSignsAssociatedChange={logic.handleSignsAssociatedChange}
