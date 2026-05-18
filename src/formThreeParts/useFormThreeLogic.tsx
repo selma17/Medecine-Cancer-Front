@@ -32,6 +32,8 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
       clientInfo: scan.client ? {
         nom: scan.client.nom,
         prenom: scan.client.prenom,
+        dateNaissance: scan.client.dateNaissance,
+        telephone: scan.client.telephone,
         renseignementsCliniques: scan.client.renseignementsCliniques
       } : null,
       mammographie: {
@@ -74,27 +76,24 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   useEffect(() => {
     if (scanId) {
-      console.log("🔍 Récupération du scan ID:", scanId); // ✅ DEBUG
+      console.log("Récupération du scan ID:", scanId); 
       axios.get(`${API_BASE_URL}/api/mammary-scan/${scanId}`)
         .then((response) => {
           const scan = response.data;
-          console.log("📊 Scan récupéré complet:", scan); // ✅ DEBUG
-          console.log("🎯 Score ACR trouvé:", scan.acrScore); // ✅ DEBUG
-          console.log("🎯 Type ACR trouvé:", scan.acrType); // ✅ DEBUG
+          console.log("Scan récupéré complet:", scan);
+          console.log("Score ACR trouvé:", scan.acrScore); 
+          console.log("Type ACR trouvé:", scan.acrType);
           
           setConclusionIA(scan.conclusionIA || "");
           setConduiteIA(scan.conduiteATenir || "");
-          // On essaye de récupérer une justification si le backend en fournit une
-          // (par exemple `justificationIA` ou `justification`).
           setJustificationIA(
             scan.justificationIA ||
             scan.justification ||
             ""
           );
           setAcrType(scan.acrType || "");
-          setAcrScore(scan.conclusionIA || ""); // ✅ NOUVEAU : Récupérer le score ACR
+          setAcrScore(scan.conclusionIA || ""); 
           
-          // ✅ NOUVEAU : Transformer les données pour le compte rendu médical
           const transformedData = transformScanDataForReport(scan);
           console.log("🔄 Données transformées pour le compte rendu:", transformedData); // ✅ DEBUG
           setScanData(transformedData);
@@ -116,7 +115,6 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     navigate("/finalisation", { state: { scanId } });
   };
 
-  // ✅ NOUVEAUX : Fonctions pour le compte rendu médical
   const openMedicalReport = () => {
     setShowMedicalReport(true);
   };
@@ -131,10 +129,9 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     conduiteIA,
     justificationIA,
     acrType,
-    acrScore, // ✅ NOUVEAU : Retourner le score ACR
+    acrScore, 
     loadingIA,
     handleSubmit,
-    // ✅ NOUVEAUX : Données et fonctions pour le compte rendu
     scanData,
     showMedicalReport,
     openMedicalReport,
