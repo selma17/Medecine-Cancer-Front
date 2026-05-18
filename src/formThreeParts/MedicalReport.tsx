@@ -49,7 +49,6 @@ interface MedicalReportProps {
       acrScore?: string;
       acrType?: string;
       conclusionIA?: string;
-      justificationIA?: string;
       conduiteATenir?: string;
     };
   };
@@ -64,7 +63,9 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
-  const doctorName = user?.nom && user?.prenom ? `${user.prenom} ${user.nom}` : (user?.nom || "Médecin Radiologue");
+  const doctorName = user?.nom && user?.prenom
+    ? `${user.prenom} ${user.nom}`
+    : (user?.nom || "Médecin Radiologue");
 
   const extractConduite = (conduite?: string) => {
     if (!conduite) return "—";
@@ -78,6 +79,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
   return (
     <>
       <style>{`
+        /* ===== INTERFACE (non imprimée) ===== */
         .mr-overlay {
           position: fixed; top: 0; left: 0; right: 0; bottom: 0;
           background: rgba(0,0,0,0.7);
@@ -86,11 +88,10 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         }
         .mr-modal {
           background: white; border-radius: 8px;
-          max-width: 800px; width: 100%;
+          max-width: 820px; width: 100%;
           max-height: 95vh; overflow: hidden;
           display: flex; flex-direction: column;
           box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          font-family: 'Times New Roman', serif;
         }
         .mr-actions {
           background: #f8fafc; padding: 12px 20px;
@@ -110,64 +111,46 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           border: none; border-radius: 6px; cursor: pointer;
           font-size: 13px; font-family: -apple-system, sans-serif;
         }
-        .mr-content {
-          overflow-y: auto; flex: 1;
-          padding: 0;
-        }
+        .mr-content { overflow-y: auto; flex: 1; padding: 0; }
+
+        /* ===== FEUILLE DU RAPPORT ===== */
         .mr-page {
           width: 100%; max-width: 760px;
           margin: 0 auto; padding: 20px 30px;
           background: white;
           font-size: 11px; line-height: 1.5;
           color: #000;
+          font-family: 'Times New Roman', serif;
         }
 
         /* EN-TÊTE */
         .mr-header-top {
-          display: flex; justify-content: space-between;
-          align-items: flex-start;
+          display: flex; justify-content: space-between; align-items: flex-start;
           border-bottom: 2px solid #1B2B6B;
           padding-bottom: 10px; margin-bottom: 10px;
         }
         .mr-hospital-info { flex: 1; }
         .mr-hospital-info p { margin: 1px 0; font-size: 10px; }
-        .mr-hospital-name {
-          font-size: 12px; font-weight: bold;
-          color: #1B2B6B; margin-bottom: 4px;
-        }
-        .mr-doctor-name {
-          font-size: 13px; font-weight: bold;
-          color: #1B2B6B;
-        }
-        .mr-title-center {
-          flex: 1; text-align: center;
-        }
+        .mr-hospital-name { font-size: 12px; font-weight: bold; color: #1B2B6B; margin-bottom: 4px; }
+        .mr-doctor-name { font-size: 13px; font-weight: bold; color: #1B2B6B; }
+        .mr-title-center { flex: 1; text-align: center; }
         .mr-main-title {
           font-size: 14px; font-weight: bold;
-          text-decoration: underline;
-          text-transform: uppercase;
+          text-decoration: underline; text-transform: uppercase;
           color: #000; margin: 0 0 6px;
         }
-        .mr-sub-title {
-          font-size: 13px; font-weight: bold;
-          color: #1B2B6B; margin: 0;
-        }
-        .mr-date-right {
-          flex: 1; text-align: right;
-          font-size: 10px;
-        }
+        .mr-sub-title { font-size: 13px; font-weight: bold; color: #1B2B6B; margin: 0; }
+        .mr-date-right { flex: 1; text-align: right; font-size: 10px; }
 
         /* INFO PATIENT */
         .mr-patient-grid {
           display: grid; grid-template-columns: 1fr 1fr;
           gap: 2px 20px;
-          border: 1px solid #000;
-          padding: 8px 10px;
-          margin-bottom: 8px;
-          font-size: 10px;
+          border: 1px solid #000; padding: 8px 10px;
+          margin-bottom: 8px; font-size: 10px;
         }
         .mr-patient-row { display: flex; gap: 6px; }
-        .mr-patient-label { font-weight: bold; min-width: 100px; }
+        .mr-patient-label { font-weight: bold; min-width: 110px; }
         .mr-patient-value { flex: 1; border-bottom: 1px solid #ccc; }
 
         /* SECTION TITRE */
@@ -175,97 +158,81 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           background: #1B2B6B; color: white;
           padding: 3px 8px; font-size: 11px;
           font-weight: bold; text-transform: uppercase;
-          margin: 8px 0 4px;
-          letter-spacing: 0.5px;
+          margin: 8px 0 4px; letter-spacing: 0.5px;
         }
 
-        /* RENSEIGNEMENTS CLINIQUES */
+        /* RENSEIGNEMENTS */
         .mr-clinical {
           border: 1px solid #ccc; padding: 6px 10px;
-          margin-bottom: 8px; min-height: 30px;
-          font-size: 10px;
+          margin-bottom: 8px; min-height: 30px; font-size: 10px;
         }
 
-        /* RÉSULTATS */
-        .mr-results-grid {
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 6px; margin-bottom: 8px;
+        /* BLOC FUSIONNÉ MAMMO / ECHO */
+        .mr-fused-block {
+          border: 1px solid #ccc;
+          margin-bottom: 8px;
         }
-        .mr-result-block {
-          border: 1px solid #ccc; padding: 6px 8px;
+        .mr-fused-block-header {
+          background: #EEF2F7;
+          padding: 4px 8px;
+          font-size: 10px; font-weight: bold; color: #1B2B6B;
+          border-bottom: 1px solid #ccc;
         }
-        .mr-result-block-title {
-          font-weight: bold; font-size: 10px;
-          text-decoration: underline; margin-bottom: 4px;
-          color: #1B2B6B;
-        }
+        .mr-fused-block-body { padding: 6px 8px; }
         .mr-result-line { font-size: 10px; margin: 2px 0; }
 
-        /* MASSES */
+        /* TABLEAU MASSES */
         .mr-masses-table {
           width: 100%; border-collapse: collapse;
-          font-size: 10px; margin-bottom: 8px;
+          font-size: 10px; margin-top: 6px;
         }
         .mr-masses-table th {
           background: #EEF2F7; border: 1px solid #ccc;
-          padding: 3px 6px; text-align: left;
+          padding: 3px 5px; text-align: left;
           font-weight: bold; color: #1B2B6B;
         }
-        .mr-masses-table td {
-          border: 1px solid #ccc; padding: 3px 6px;
-        }
+        .mr-masses-table td { border: 1px solid #ccc; padding: 3px 5px; }
+        .mr-masses-table tr:nth-child(even) td { background: #FAFAFA; }
 
         /* CONCLUSION */
         .mr-conclusion {
-          border: 2px solid #1B2B6B; padding: 8px 10px;
-          margin: 8px 0;
+          border: 2px solid #1B2B6B; padding: 8px 10px; margin: 8px 0;
         }
         .mr-conclusion-title {
           font-weight: bold; font-size: 12px;
-          color: #1B2B6B; margin-bottom: 4px;
-          text-transform: uppercase;
+          color: #1B2B6B; margin-bottom: 4px; text-transform: uppercase;
         }
         .mr-acr-badge {
           display: inline-block;
           background: #1B2B6B; color: white;
           padding: 2px 10px; border-radius: 4px;
-          font-size: 13px; font-weight: bold;
-          margin-right: 8px;
+          font-size: 13px; font-weight: bold; margin-right: 8px;
         }
-        .mr-conduite {
-          font-weight: bold; color: #1B2B6B;
-          font-size: 11px;
-        }
+        .mr-conduite { font-weight: bold; color: #1B2B6B; font-size: 11px; }
 
         /* SIGNATURE */
         .mr-signature {
-          display: flex; justify-content: space-between;
-          align-items: flex-end;
-          margin-top: 16px; padding-top: 8px;
-          border-top: 1px solid #000;
+          display: flex; justify-content: space-between; align-items: flex-end;
+          margin-top: 16px; padding-top: 8px; border-top: 1px solid #000;
         }
         .mr-sig-left { font-size: 10px; }
         .mr-sig-stamp {
-          width: 80px; height: 80px;
-          border: 2px solid #1B2B6B; border-radius: 50%;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          font-size: 9px; font-weight: bold; color: #1B2B6B;
-          text-align: center;
+          width: 80px; height: 80px; border: 2px solid #1B2B6B; border-radius: 50%;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          font-size: 9px; font-weight: bold; color: #1B2B6B; text-align: center;
         }
         .mr-sig-right { text-align: right; font-size: 10px; }
-        .mr-sig-line {
-          width: 150px; border-bottom: 1px solid #000;
-          margin: 20px 0 4px auto;
-        }
+        .mr-sig-line { width: 150px; border-bottom: 1px solid #000; margin: 20px 0 4px auto; }
 
-        /* PRINT */
+        /* ===== IMPRESSION : uniquement la feuille ===== */
         @media print {
-          .mr-overlay { position: static; background: white; padding: 0; }
-          .mr-modal { box-shadow: none; max-height: none; border-radius: 0; }
+          body * { visibility: hidden; }
+          .mr-page, .mr-page * { visibility: visible; }
+          .mr-page {
+            position: fixed; top: 0; left: 0;
+            width: 100%; padding: 10px 20px;
+          }
           .mr-actions { display: none !important; }
-          .mr-content { overflow: visible; }
-          .mr-page { padding: 10px 20px; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
@@ -273,20 +240,22 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       <div className="mr-overlay">
         <div className="mr-modal">
 
-          {/* Boutons actions */}
+          {/* Barre d'actions — cachée à l'impression */}
           <div className="mr-actions">
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B" }}>
+            <span style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B", fontFamily: "inherit" }}>
               Compte Rendu Médical
             </span>
             <div style={{ display: "flex", gap: "8px" }}>
               <button className="mr-print-btn" onClick={() => window.print()}>
-                🖨️ Imprimer
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimer
               </button>
               <button className="mr-close-btn" onClick={onClose}>✕ Fermer</button>
             </div>
           </div>
 
           <div className="mr-content">
+            {/* ===== FEUILLE DU RAPPORT (seule cette partie s'imprime) ===== */}
             <div className="mr-page">
 
               {/* EN-TÊTE */}
@@ -337,133 +306,135 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 {scanData.clientInfo?.renseignementsCliniques || "—"}
               </div>
 
-              {/* RÉSULTATS MAMMOGRAPHIE */}
+              {/* ===== MAMMOGRAPHIE FUSIONNÉE (anomalies + masses dans 1 bloc) ===== */}
               <div className="mr-section-title">Résultat — Mammographie</div>
-              <div className="mr-results-grid">
-                <div className="mr-result-block">
-                  <div className="mr-result-block-title">Densité mammaire</div>
-                  <div className="mr-result-line">
-                    Type : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
+              <div className="mr-fused-block">
+                {/* Densité + Anomalies */}
+                <div className="mr-fused-block-header">Données générales</div>
+                <div className="mr-fused-block-body">
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
+                    <div className="mr-result-line">
+                      Densité mammaire : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
+                    </div>
+                    <div className="mr-result-line">
+                      Asymétrie : <strong>{scanData.mammographie?.asymetrie ? `Oui — ${scanData.mammographie.typeAsymetrie || ""}` : "Non"}</strong>
+                    </div>
+                    <div className="mr-result-line">
+                      Distorsion architecturale : <strong>{scanData.mammographie?.distorsionArchitecturale ? "Oui" : "Non"}</strong>
+                    </div>
+                    <div className="mr-result-line">
+                      Calcifications : <strong>{scanData.mammographie?.calcifications ? `Oui — ${scanData.mammographie.typesCalcifications || ""}` : "Non"}</strong>
+                    </div>
                   </div>
+                  {scanData.mammographie?.signesAssocies && scanData.mammographie.signesAssocies.length > 0 && (
+                    <div className="mr-result-line" style={{ marginTop: "4px" }}>
+                      Signes associés : <strong>{scanData.mammographie.signesAssocies.join(", ")}</strong>
+                    </div>
+                  )}
                 </div>
-                <div className="mr-result-block">
-                  <div className="mr-result-block-title">Anomalies</div>
-                  <div className="mr-result-line">
-                    Asymétrie : <strong>{scanData.mammographie?.asymetrie ? `Oui — ${scanData.mammographie.typeAsymetrie || ""}` : "Non"}</strong>
-                  </div>
-                  <div className="mr-result-line">
-                    Distorsion : <strong>{scanData.mammographie?.distorsionArchitecturale ? "Oui" : "Non"}</strong>
-                  </div>
-                  <div className="mr-result-line">
-                    Calcifications : <strong>{scanData.mammographie?.calcifications ? `Oui — ${scanData.mammographie.typesCalcifications || ""}` : "Non"}</strong>
-                  </div>
-                </div>
+
+                {/* Masses mammographie dans le même bloc */}
+                {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
+                  <>
+                    <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                      Masses détectées ({scanData.mammographie.masses.length})
+                    </div>
+                    <div className="mr-fused-block-body">
+                      <table className="mr-masses-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Localisation</th>
+                            <th>Sein</th>
+                            <th>Forme</th>
+                            <th>Contours</th>
+                            <th>Densité</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {scanData.mammographie.masses.map((masse, i) => (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td>{masse.localisation || "—"}</td>
+                              <td>{masse.sein || "—"}</td>
+                              <td>{masse.forme || "—"}</td>
+                              <td>{masse.contours || "—"}</td>
+                              <td>{masse.densite || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* SIGNES ASSOCIÉS MAMMOGRAPHIE */}
-              {scanData.mammographie?.signesAssocies && scanData.mammographie.signesAssocies.length > 0 && (
-                <div className="mr-result-block" style={{ marginBottom: "8px" }}>
-                  <div className="mr-result-block-title">Signes associés (Mammographie)</div>
-                  <div className="mr-result-line">{scanData.mammographie.signesAssocies.join(", ")}</div>
-                </div>
-              )}
-
-              {/* MASSES MAMMOGRAPHIE */}
-              {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
-                <>
-                  <div className="mr-section-title">Masses — Mammographie</div>
-                  <table className="mr-masses-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Localisation</th>
-                        <th>Sein</th>
-                        <th>Distance</th>
-                        <th>Forme</th>
-                        <th>Contours</th>
-                        <th>Densité</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scanData.mammographie.masses.map((masse, i) => (
-                        <tr key={i}>
-                          <td>{i + 1}</td>
-                          <td>{masse.localisation}</td>
-                          <td>{masse.sein || "—"}</td>
-                          <td>{masse.distanceCentre ? `${masse.distanceCentre} cm` : "—"}</td>
-                          <td>{masse.forme}</td>
-                          <td>{masse.contours}</td>
-                          <td>{masse.densite}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </>
-              )}
-
-              {/* RÉSULTATS ÉCHOGRAPHIE */}
+              {/* ===== ÉCHOGRAPHIE FUSIONNÉE (échostructure + masses dans 1 bloc) ===== */}
               <div className="mr-section-title">Résultat — Échographie</div>
-              <div className="mr-result-block" style={{ marginBottom: "8px" }}>
-                <div className="mr-result-block-title">Échostructure mammaire</div>
-                <div className="mr-result-line">{scanData.echographie?.echostructureMammaire || "—"}</div>
-              </div>
-
-              {/* SIGNES ASSOCIÉS ÉCHOGRAPHIE */}
-              {scanData.echographie?.signesAssocies && scanData.echographie.signesAssocies.length > 0 && (
-                <div className="mr-result-block" style={{ marginBottom: "8px" }}>
-                  <div className="mr-result-block-title">Signes associés (Échographie)</div>
-                  <div className="mr-result-line">{scanData.echographie.signesAssocies.join(", ")}</div>
+              <div className="mr-fused-block">
+                {/* Échostructure + signes */}
+                <div className="mr-fused-block-header">Données générales</div>
+                <div className="mr-fused-block-body">
+                  <div className="mr-result-line">
+                    Échostructure mammaire : <strong>{scanData.echographie?.echostructureMammaire || "—"}</strong>
+                  </div>
+                  {scanData.echographie?.signesAssocies && scanData.echographie.signesAssocies.length > 0 && (
+                    <div className="mr-result-line" style={{ marginTop: "4px" }}>
+                      Signes associés : <strong>{scanData.echographie.signesAssocies.join(", ")}</strong>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* MASSES ÉCHOGRAPHIE */}
-              {scanData.echographie?.masses && scanData.echographie.masses.length > 0 && (
-                <>
-                  <div className="mr-section-title">Masses — Échographie</div>
-                  <table className="mr-masses-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Localisation</th>
-                        <th>Mesure</th>
-                        <th>Forme</th>
-                        <th>Contours</th>
-                        <th>Densité</th>
-                        <th>Orientation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scanData.echographie.masses.map((masse, i) => (
-                        <tr key={i}>
-                          <td>{i + 1}</td>
-                          <td>{masse.localisation}</td>
-                          <td>{masse.mesure ? `${masse.mesure} mm` : "—"}</td>
-                          <td>{masse.forme}</td>
-                          <td>{masse.contours}</td>
-                          <td>{masse.densite}</td>
-                          <td>{masse.orientation}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </>
-              )}
+                {/* Masses échographie dans le même bloc */}
+                {scanData.echographie?.masses && scanData.echographie.masses.length > 0 && (
+                  <>
+                    <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                      Masses détectées ({scanData.echographie.masses.length})
+                    </div>
+                    <div className="mr-fused-block-body">
+                      <table className="mr-masses-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Localisation</th>
+                            <th>Mesure</th>
+                            <th>Forme</th>
+                            <th>Contours</th>
+                            <th>Échostructure</th>
+                            <th>Orientation</th>
+                            <th>Comportement</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {scanData.echographie.masses.map((masse, i) => (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td>{masse.localisation || "—"}</td>
+                              <td>{masse.mesure ? `${masse.mesure} mm` : "—"}</td>
+                              <td>{masse.forme || "—"}</td>
+                              <td>{masse.contours || "—"}</td>
+                              <td>{masse.densite || "—"}</td>
+                              <td>{masse.orientation || "—"}</td>
+                              <td>{masse.comportement || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* CONCLUSION */}
               <div className="mr-conclusion">
                 <div className="mr-conclusion-title">Conclusion</div>
-                {scanData.resultats?.conclusionIA && (
-                  <p style={{ fontSize: "10px", marginBottom: "6px" }}>
-                    {scanData.resultats.conclusionIA}
-                  </p>
-                )}
                 <p style={{ fontSize: "11px", margin: "4px 0" }}>
                   <span className="mr-acr-badge">
                     ACR {scanData.resultats?.acrScore || "—"}
                     {scanData.resultats?.acrType ? ` (Type ${scanData.resultats.acrType})` : ""}
                   </span>
                   <span className="mr-conduite">
-                    A {extractConduite(scanData.resultats?.conduiteATenir)}
+                    {extractConduite(scanData.resultats?.conduiteATenir)}
                   </span>
                 </p>
               </div>
@@ -485,7 +456,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 </div>
               </div>
 
-            </div>
+            </div>{/* fin .mr-page */}
           </div>
         </div>
       </div>
