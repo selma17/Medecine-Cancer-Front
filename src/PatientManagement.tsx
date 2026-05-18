@@ -72,6 +72,8 @@ const PatientManagement: React.FC = () => {
         clientInfo: scan.client ? {
           nom: scan.client.nom,
           prenom: scan.client.prenom,
+          dateNaissance: scan.client.dateNaissance,
+          telephone: scan.client.telephone,
           renseignementsCliniques: scan.client.renseignementsCliniques
         } : null,
         mammographie: {
@@ -134,17 +136,21 @@ const PatientManagement: React.FC = () => {
 
   const SidebarContent = () => (
     <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", height: "100vh" }}>
+      {/* Logo + Nom */}
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
-              <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
-            </svg>
-          </div>
-          <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "1px" }}>CANCER IA</span>
+          <img
+            src="/logo-octobre-rose.png"
+            alt="Logo"
+            style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "6px" }}
+          />
+          <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "0.5px" }}>
+            E-Radiologie
+          </span>
         </div>
       </div>
+
+      {/* Médecin */}
       <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#4A90D9", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: "600", flexShrink: 0 }}>
@@ -156,6 +162,7 @@ const PatientManagement: React.FC = () => {
           </div>
         </div>
       </div>
+
       <nav style={{ padding: "1rem 0", flex: 1 }}>
         {navItems.map((item, i) => (
           <div key={i} onClick={() => { navigate(item.route); setSidebarOpen(false); }}
@@ -167,6 +174,7 @@ const PatientManagement: React.FC = () => {
           </div>
         ))}
       </nav>
+
       <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
         <button onClick={logout} style={{ width: "100%", padding: "10px", background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", fontFamily: "inherit" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -187,12 +195,8 @@ const PatientManagement: React.FC = () => {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#EEF2F7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
-      {/* Sidebar desktop */}
-      <div className="sidebar-desktop-wrapper">
-        <SidebarContent />
-      </div>
+      <div className="sidebar-desktop-wrapper"><SidebarContent /></div>
 
-      {/* Sidebar mobile */}
       {sidebarOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex" }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setSidebarOpen(false)} />
@@ -201,8 +205,6 @@ const PatientManagement: React.FC = () => {
       )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-
-        {/* HEADER */}
         <header style={{ background: "white", padding: "1rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button className="burger-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", background: "none", border: "none", cursor: "pointer" }}>
@@ -221,24 +223,17 @@ const PatientManagement: React.FC = () => {
         <main style={{ padding: "2rem", flex: 1 }}>
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", animation: "fadeInUp 0.4s ease both" }}>
 
-            {/* Toolbar */}
             <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
               <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#1B2B6B", margin: 0 }}>Liste des patients</h2>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                {/* Search */}
                 <div style={{ position: "relative" }}>
                   <svg style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input
-                    type="text"
-                    placeholder="Rechercher par nom..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                  <input type="text" placeholder="Rechercher par nom..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                     style={{ padding: "8px 12px 8px 38px", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "14px", width: "240px", outline: "none", fontFamily: "inherit" }}
                     onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
                     onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                   />
                 </div>
-                {/* Add button */}
                 <button onClick={() => navigate(ROUTES.ADD_PATIENT)}
                   style={{ padding: "8px 16px", background: "#1B2B6B", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontFamily: "inherit" }}
                   onMouseEnter={(e) => e.currentTarget.style.background = "#243d8f"}
@@ -250,14 +245,12 @@ const PatientManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Table header */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 120px", padding: "12px 2rem", background: "#F8FAFC", borderBottom: "1px solid #e2e8f0" }}>
               {["Nom et Prénom", "ACR", "Type", "Actions"].map((h, i) => (
                 <div key={i} style={{ fontSize: "12px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: i > 0 ? "center" : "left" }}>{h}</div>
               ))}
             </div>
 
-            {/* Table body */}
             {loading ? (
               <div style={{ padding: "4rem", textAlign: "center" }}>
                 <div style={{ width: "32px", height: "32px", border: "3px solid #EEF2F7", borderTop: "3px solid #1B2B6B", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 1rem" }}/>
@@ -281,7 +274,6 @@ const PatientManagement: React.FC = () => {
                     onMouseEnter={(e) => e.currentTarget.style.background = "#F8FAFC"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "white"}
                   >
-                    {/* Nom */}
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#EEF2F7", display: "flex", alignItems: "center", justifyContent: "center", color: "#1B2B6B", fontSize: "12px", fontWeight: "600", flexShrink: 0 }}>
                         {patient.nom.charAt(0).toUpperCase()}
@@ -290,17 +282,14 @@ const PatientManagement: React.FC = () => {
                         {patient.nom} {patient.prenom}
                       </span>
                     </div>
-                    {/* ACR */}
                     <div style={{ textAlign: "center" }}>
                       <span style={{ background: acrStyle.bg, color: acrStyle.color, padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
                         {patient.acr || "—"}
                       </span>
                     </div>
-                    {/* Type */}
                     <div style={{ textAlign: "center", fontSize: "13px", color: "#64748b" }}>
                       {patient.type || "—"}
                     </div>
-                    {/* Actions */}
                     <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
                       <button onClick={() => handleView(patient.id)}
                         style={{ width: "34px", height: "34px", background: "#EEF2F7", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
@@ -328,7 +317,6 @@ const PatientManagement: React.FC = () => {
               })
             )}
 
-            {/* Pagination */}
             {!loading && !error && totalPages > 1 && (
               <div style={{ padding: "1.25rem 2rem", borderTop: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
                 <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
@@ -358,6 +346,7 @@ const PatientManagement: React.FC = () => {
           </div>
         </main>
       </div>
+
       {reportScanData && (
         <MedicalReport
           isOpen={showReport}
@@ -365,6 +354,7 @@ const PatientManagement: React.FC = () => {
           scanData={reportScanData}
         />
       )}
+
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -375,9 +365,6 @@ const PatientManagement: React.FC = () => {
           .burger-btn { display: block !important; }
           main { padding: 1rem !important; }
           header { padding: 1rem !important; }
-        }
-        @media (max-width: 640px) {
-          .sidebar-desktop-wrapper { display: none !important; }
         }
       `}</style>
     </div>

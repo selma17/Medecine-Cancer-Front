@@ -82,24 +82,22 @@ const LandingPage = () => {
           </span>
         </div>
 
-        {/* Logo + Titre */}
+        {/* Logo image + Titre */}
         <div style={{
           display: "flex", alignItems: "center",
           justifyContent: "center", gap: "12px",
           marginBottom: "1.25rem"
         }}>
-          <div style={{
-            width: "52px", height: "52px",
-            borderRadius: "14px",
-            background: "#1B2B6B",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(27,43,107,0.3)"
-          }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
-              <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
-            </svg>
-          </div>
+          <img
+            src="/logo-octobre-rose.png"
+            alt="Octobre Rose"
+            style={{
+              width: "52px",
+              height: "52px",
+              objectFit: "contain",
+              borderRadius: "14px"
+            }}
+          />
           <h1 style={{
             fontSize: "34px",
             fontWeight: "700",
@@ -107,7 +105,7 @@ const LandingPage = () => {
             margin: 0,
             letterSpacing: "-0.5px"
           }}>
-            IRadiologie
+            Breast AI Report
           </h1>
         </div>
 

@@ -25,10 +25,10 @@ const Dashboard: React.FC = () => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
+
         // Récupérer les clients du médecin
         const clientsRes = await axios.get(`${API_BASE_URL}/api/clients/by-medecin`);
         const clients = clientsRes.data;
-        const totalPatients = clients.length;
 
         // Récupérer tous les scans
         const scansRes = await axios.get(`${API_BASE_URL}/api/mammary-scan/all`);
@@ -40,17 +40,26 @@ const Dashboard: React.FC = () => {
           s.client && clientIds.has(s.client.id)
         );
 
-        // Examens ce mois
+        // Rapports générés = scans avec conclusionIA non null/vide
+        const scansAvecRapport = myScans.filter((s: { conclusionIA?: string }) =>
+          s.conclusionIA !== null && s.conclusionIA !== undefined && s.conclusionIA !== ''
+        );
+        const rapports = scansAvecRapport.length;
+
+        // Total patients = uniquement ceux ayant au moins un rapport généré
+        const clientsAvecRapport = new Set(
+          scansAvecRapport
+            .filter((s: { client?: { id: number } }) => s.client)
+            .map((s: { client: { id: number } }) => s.client.id)
+        );
+        const totalPatients = clientsAvecRapport.size;
+
+        // Examens total = tous les scans du médecin (même sans rapport)
         const examensThisMonth = myScans.length;
 
         // ACR 4-5
-        const acr45 = myScans.filter((s: { conclusionIA?: string }) =>
+        const acr45 = scansAvecRapport.filter((s: { conclusionIA?: string }) =>
           s.conclusionIA === '4' || s.conclusionIA === '5'
-        ).length;
-
-        // Rapports générés = scans avec conclusionIA non null
-        const rapports = myScans.filter((s: { conclusionIA?: string }) =>
-          s.conclusionIA !== null && s.conclusionIA !== undefined
         ).length;
 
         setStatsData({
@@ -84,18 +93,21 @@ const Dashboard: React.FC = () => {
 
   const SidebarContent = () => (
     <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", height: "100vh" }}>
+      {/* Logo + Nom */}
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
-              <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
-            </svg>
-          </div>
-          <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "1px" }}>CANCER IA</span>
+          <img
+            src="/logo-octobre-rose.png"
+            alt="Logo"
+            style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "6px" }}
+          />
+          <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "0.5px" }}>
+            E-Radiologie
+          </span>
         </div>
       </div>
 
+      {/* Médecin */}
       <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "#4A90D9", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: "600", flexShrink: 0 }}>
@@ -175,11 +187,11 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 2px" }}>{stat.label}</p>
-                  <p style={{ fontSize: "22px", fontWeight: "600", color: stat.color, margin: 0 }}>{statsLoading ? (
-                    <div style={{ width: "20px", height: "20px", border: "2px solid #EEF2F7", borderTop: `2px solid ${stat.color}`, borderRadius: "50%", animation: "spin 1s linear infinite" }}/>
-                  ) : (
-                    stat.value
-                  )}</p>
+                  <p style={{ fontSize: "22px", fontWeight: "600", color: stat.color, margin: 0 }}>
+                    {statsLoading ? (
+                      <div style={{ width: "20px", height: "20px", border: "2px solid #EEF2F7", borderTop: `2px solid ${stat.color}`, borderRadius: "50%", animation: "spin 1s linear infinite" }}/>
+                    ) : stat.value}
+                  </p>
                 </div>
               </div>
             ))}

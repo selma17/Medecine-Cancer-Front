@@ -19,12 +19,8 @@ const AddPatientForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const medecinId = user?.id;
-
       const response = await axios.post(
-        `${API_BASE_URL}/api/clients/enregistrer?medecinId=${medecinId}`,
+        `${API_BASE_URL}/api/clients/enregistrer`,
         { nom, prenom, dateNaissance, telephone, renseignementsCliniques: renseignements }
       );
       setClientId(response.data.id);
@@ -79,7 +75,6 @@ const AddPatientForm: React.FC = () => {
 
           <form onSubmit={handleSubmit} style={{ padding: "2rem" }}>
 
-            {/* Nom + Prénom sur la même ligne */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
               <div>
                 <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Nom *</label>
@@ -99,7 +94,6 @@ const AddPatientForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Date de naissance + Téléphone sur la même ligne */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
               <div>
                 <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Date de naissance *</label>
@@ -119,7 +113,6 @@ const AddPatientForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Renseignements cliniques */}
             <div style={{ marginBottom: "1.75rem" }}>
               <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Renseignements cliniques *</label>
               <textarea placeholder="Antécédents médicaux, motif de consultation..."
