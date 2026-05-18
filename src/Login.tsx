@@ -7,6 +7,7 @@ const LoginForm: React.FC = () => {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { login, register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,15 +27,14 @@ const LoginForm: React.FC = () => {
         toast.error(err.message || "Erreur lors de la création du compte");
       }
     } else {
-        try {
-          await login(nom, password);
-          toast.success("Connexion réussie !");
-          // navigate vers dashboard géré dans useAuth ou ici
-        } catch (error: unknown) {
-          const err = error as Error;
-          toast.error(err.message || "Nom ou mot de passe incorrect");
-        }
+      try {
+        await login(nom, password);
+        toast.success("Connexion réussie !");
+      } catch (error: unknown) {
+        const err = error as Error;
+        toast.error(err.message || "Nom ou mot de passe incorrect");
       }
+    }
   };
 
   return (
@@ -65,55 +65,38 @@ const LoginForm: React.FC = () => {
           padding: "3rem",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between"
+          justifyContent: "center"
         }}>
           <div>
-            {/* Logo */}
+            {/* Logo Octobre Rose */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "3rem" }}>
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "50%",
-                background: "rgba(255,255,255,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <path d="M12 2C9 2 7 4 7 6.5c0 2 1.5 3.5 3 5L12 13l2-1.5c1.5-1.5 3-3 3-5C17 4 15 2 12 2z"/>
-                  <path d="M12 13l-4 6c-.5 1 0 2 1 2s1.5-.5 3-2l0 0c1.5 1.5 2 2 3 2s1.5-1 1-2l-4-6z"/>
-                </svg>
-              </div>
-              <span style={{ color: "white", fontSize: "18px", fontWeight: "600", letterSpacing: "1px" }}>CANCER IA</span>
+              <img
+                src="/logo-octobre-rose.png"
+                alt="Octobre Rose"
+                style={{ width: "40px", height: "40px", objectFit: "contain" }}
+              />
+              <span style={{ color: "white", fontSize: "18px", fontWeight: "600", letterSpacing: "1px" }}>
+                Breast AI Report 
+              </span>
             </div>
 
             <h1 style={{ color: "white", fontSize: "26px", fontWeight: "600", margin: "0 0 1rem", lineHeight: "1.3" }}>
               Plateforme d'aide au diagnostic mammaire
             </h1>
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", lineHeight: "1.7", margin: "0 0 2rem" }}>
-              Analyse intelligente assistée par IA pour les radiologues et médecins spécialistes.
+              Rédaction assistée par l'IA des comptes rendus de mammographie et d'échographie.
             </p>
 
-            {/* Features */}
+            {/* Features — sans "Analyse assistée par intelligence artificielle" */}
             {[
               "Calcul automatique du score BI-RADS",
-              "Analyse assistée par intelligence artificielle",
               "Génération automatique de rapports médicaux"
             ].map((f, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4A90D9", flexShrink: 0 }}></div>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#E8A0B4", flexShrink: 0 }}></div>
                 <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "13px" }}>{f}</span>
               </div>
             ))}
-          </div>
-
-          {/* Stats card */}
-          <div style={{
-            background: "rgba(255,255,255,0.08)",
-            borderRadius: "12px",
-            padding: "1rem 1.25rem",
-            border: "1px solid rgba(255,255,255,0.15)"
-          }}>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", margin: "0 0 4px" }}>Patients analysés ce mois</p>
-            <p style={{ color: "white", fontSize: "22px", fontWeight: "600", margin: "0" }}>
-              1,248 <span style={{ color: "#4ade80", fontSize: "13px", fontWeight: "400" }}>+12%</span>
-            </p>
           </div>
         </div>
 
@@ -184,21 +167,51 @@ const LoginForm: React.FC = () => {
               <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px" }}>
                 Mot de passe
               </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: "100%", boxSizing: "border-box",
-                  padding: "10px 14px", fontSize: "14px",
-                  border: "1px solid #e2e8f0", borderRadius: "8px",
-                  outline: "none", fontFamily: "inherit"
-                }}
-                onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
-                onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    padding: "10px 42px 10px 14px", fontSize: "14px",
+                    border: "1px solid #e2e8f0", borderRadius: "8px",
+                    outline: "none", fontFamily: "inherit"
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+                {/* Icône œil */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute", right: "12px", top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none", border: "none",
+                    cursor: "pointer", padding: "0",
+                    color: "#94a3b8", display: "flex", alignItems: "center"
+                  }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    // Œil barré (masquer)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    // Œil ouvert (afficher)
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
               {!isRegisterMode && (
                 <div style={{ textAlign: "right", marginTop: "6px" }}>
                   <span style={{ fontSize: "12px", color: "#4A90D9", cursor: "pointer" }}>
