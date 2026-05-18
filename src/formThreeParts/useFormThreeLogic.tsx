@@ -11,12 +11,10 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   const [conclusionIA, setConclusionIA] = useState<string>("");
   const [conduiteIA, setConduiteIA] = useState<string>("");
-  
   const [justificationIA, setJustificationIA] = useState<string>("");
   const [acrType, setAcrType] = useState<string>("");
-  const [acrScore, setAcrScore] = useState<string>(""); // ✅ NOUVEAU : Score ACR
+  const [acrScore, setAcrScore] = useState<string>("");
   const [loadingIA, setLoadingIA] = useState<boolean>(true);
-  
   const [scanData, setScanData] = useState<any>(null);
   const [showMedicalReport, setShowMedicalReport] = useState<boolean>(false);
 
@@ -26,15 +24,16 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     { title: "Conclusion", status: "in-progress" as const },
   ];
 
-  const transformScanDataForReport = (scan: any) => {
+  const transformScanDataForReport = (scan: any, clientDetails?: any) => {
     return {
       scanId: scan.id?.toString(),
       clientInfo: scan.client ? {
         nom: scan.client.nom,
         prenom: scan.client.prenom,
-        dateNaissance: scan.client.dateNaissance,
-        telephone: scan.client.telephone,
-        renseignementsCliniques: scan.client.renseignementsCliniques
+        // Priorité aux détails récupérés séparément
+        dateNaissance: clientDetails?.dateNaissance || scan.client.dateNaissance || null,
+        telephone: clientDetails?.telephone || scan.client.telephone || null,
+        renseignementsCliniques: clientDetails?.renseignementsCliniques || scan.client.renseignementsCliniques
       } : null,
       mammographie: {
         densiteMammaire: scan.densiteMammaire,
@@ -42,14 +41,15 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
           localisation: masse.localisation,
           forme: masse.forme,
           contours: masse.contours,
-          densite: masse.densite
+          densite: masse.densite,
+          sein: masse.sein,
         })) || [],
         asymetrie: scan.asymetrie,
         typeAsymetrie: scan.typeAsymetrie,
         distorsionArchitecturale: scan.distorsionArchitecturale,
         calcifications: scan.calcifications,
         typesCalcifications: scan.typesCalcifications,
-        signesAssocies: scan.signesAssociesMammographie?.map((s: any) => s.signe) || []
+        signesAssocies: scan.signesAssociesMammographie || []
       },
       echographie: {
         echostructureMammaire: scan.echostructureMammaire,
@@ -63,10 +63,10 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
           comportement: masse.comportementDesFaisceauxUltrasons,
           calcifications: masse.calcifications
         })) || [],
-        signesAssocies: scan.signesAssociesEchostructure?.map((s: any) => s.signe) || []
+        signesAssocies: scan.signesAssociesEchostructure || []
       },
       resultats: {
-        acrScore: scan.acrScore,
+        acrScore: scan.conclusionIA,
         acrType: scan.acrType,
         conclusionIA: scan.conclusionIA,
         conduiteATenir: scan.conduiteATenir
@@ -76,34 +76,35 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   useEffect(() => {
     if (scanId) {
-      console.log("Récupération du scan ID:", scanId); 
       axios.get(`${API_BASE_URL}/api/mammary-scan/${scanId}`)
-        .then((response) => {
+        .then(async (response) => {
           const scan = response.data;
-          console.log("Scan récupéré complet:", scan);
-          console.log("Score ACR trouvé:", scan.acrScore); 
-          console.log("Type ACR trouvé:", scan.acrType);
-          
+
           setConclusionIA(scan.conclusionIA || "");
           setConduiteIA(scan.conduiteATenir || "");
-          setJustificationIA(
-            scan.justificationIA ||
-            scan.justification ||
-            ""
-          );
+          setJustificationIA(scan.justificationIA || scan.justification || "");
           setAcrType(scan.acrType || "");
-          setAcrScore(scan.conclusionIA || ""); 
-          
-          const transformedData = transformScanDataForReport(scan);
-          console.log("🔄 Données transformées pour le compte rendu:", transformedData); // ✅ DEBUG
+          setAcrScore(scan.conclusionIA || "");
+
+          // ✅ Récupérer les détails complets du client séparément
+          let clientDetails = null;
+          if (scan.client?.id) {
+            try {
+              const clientsRes = await axios.get(`${API_BASE_URL}/api/clients/by-medecin`);
+              const clients = clientsRes.data;
+              clientDetails = clients.find((c: any) => c.id === scan.client.id);
+            } catch (e) {
+              console.error("Erreur récupération client:", e);
+            }
+          }
+
+          const transformedData = transformScanDataForReport(scan, clientDetails);
           setScanData(transformedData);
-          
-          console.log("✅ États mis à jour - ACR Score:", scan.acrScore, "ACR Type:", scan.acrType); // ✅ DEBUG
-          toast.success("Analyse IA récupérée ✅");
+          toast.success("Analyse IA récupérée");
         })
         .catch((error) => {
-          console.error("❌ Erreur récupération analyse IA:", error);
-          toast.error("Erreur lors de la récupération du scan ❌");
+          console.error("Erreur récupération analyse IA:", error);
+          toast.error("Erreur lors de la récupération du scan");
         })
         .finally(() => {
           setLoadingIA(false);
@@ -111,17 +112,13 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     }
   }, [scanId]);
 
+  // ✅ Redirige directement vers le dashboard
   const handleSubmit = () => {
-    navigate("/finalisation", { state: { scanId } });
+    navigate("/dashboard");
   };
 
-  const openMedicalReport = () => {
-    setShowMedicalReport(true);
-  };
-
-  const closeMedicalReport = () => {
-    setShowMedicalReport(false);
-  };
+  const openMedicalReport = () => setShowMedicalReport(true);
+  const closeMedicalReport = () => setShowMedicalReport(false);
 
   return {
     steps,
@@ -129,7 +126,7 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     conduiteIA,
     justificationIA,
     acrType,
-    acrScore, 
+    acrScore,
     loadingIA,
     handleSubmit,
     scanData,

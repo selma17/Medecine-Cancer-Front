@@ -192,7 +192,7 @@ const PatientManagement: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#EEF2F7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#EEF2F7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
 
       <div className="sidebar-desktop-wrapper"><SidebarContent /></div>
 
@@ -203,7 +203,7 @@ const PatientManagement: React.FC = () => {
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100vh", overflow: "hidden" }}>
         <header style={{ background: "white", padding: "1rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button className="burger-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", background: "none", border: "none", cursor: "pointer" }}>
@@ -219,7 +219,7 @@ const PatientManagement: React.FC = () => {
           </div>
         </header>
 
-        <main style={{ padding: "2rem", flex: 1 }}>
+        <main style={{ padding: "2rem", flex: 1, overflowY: "auto" }}>
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", animation: "fadeInUp 0.4s ease both" }}>
 
             <div style={{ padding: "1.5rem 2rem", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
