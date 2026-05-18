@@ -4,10 +4,8 @@ interface Props {
   massNumber: string;
   setMassNumber: (value: string) => void;
   localisations: string[];
-  distancesCentre: string[];
   seins: ("gauche" | "droite")[];
   handleLocalisationChange: (index: number, value: string) => void;
-  handleDistanceCentreChange: (index: number, value: string) => void;
   handleSeinChange: (index: number, value: "gauche" | "droite") => void;
   formes: string[];
   contours: string[];
@@ -55,8 +53,8 @@ const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
 
 const MassesSection: React.FC<Props> = ({
   massNumber, setMassNumber,
-  localisations, distancesCentre, seins,
-  handleLocalisationChange, handleDistanceCentreChange, handleSeinChange,
+  localisations, seins,
+  handleLocalisationChange, handleSeinChange,
   formes, contours, densites, handleMassesDataChange,
 }) => {
   const [hoveredItem, setHoveredItem] = useState("");
@@ -87,14 +85,7 @@ const MassesSection: React.FC<Props> = ({
             />
           </div>
 
-          <div className="content">
-            <p className="title">Distance du mamelon (cm)</p>
-            <input type="text" placeholder="ex: 2"
-              value={distancesCentre[index] || ""}
-              onChange={(e) => handleDistanceCentreChange(index, e.target.value)}
-              className="text-input"
-            />
-          </div>
+          {/* Distance du mamelon supprimée */}
 
           <div className="content">
             <p className="title">Sein</p>

@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
             style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "6px" }}
           />
           <span style={{ color: "white", fontWeight: "600", fontSize: "15px", letterSpacing: "0.5px" }}>
-            E-Radiologie
+            Breast IA Report
           </span>
         </div>
       </div>

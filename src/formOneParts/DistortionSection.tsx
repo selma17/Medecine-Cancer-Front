@@ -4,19 +4,23 @@ interface Props {
   distortion: string;
   handleDistortionChange: (value: string) => void;
   showDistortionOptions: boolean;
+  distortionOption: string;
+  handleDistortionOptionChange: (value: string) => void;
   hoveredOption: string;
   setHoveredOption: (value: string) => void;
 }
 
 const distortionImages: { [key: string]: string } = {
   "centre claire": "/claire.png",
-  "centre dence": "/dense.png",
+  "centre dense": "/dense.png",
 };
 
 const DistortionSection: React.FC<Props> = ({
   distortion,
   handleDistortionChange,
   showDistortionOptions,
+  distortionOption,
+  handleDistortionOptionChange,
   hoveredOption,
   setHoveredOption,
 }) => {
@@ -46,18 +50,25 @@ const DistortionSection: React.FC<Props> = ({
         <div className="content">
           <p className="title">Options de distorsion architecturale</p>
           <div className="options">
-            {["centre claire", "centre dence"].map((option) => (
+            {["centre claire", "centre dense"].map((option) => (
               <div
                 key={option}
                 style={{ position: "relative" }}
                 onMouseEnter={() => setHoveredOption(option)}
                 onMouseLeave={() => setHoveredOption("")}
               >
+                {/* Radio au lieu de checkbox → sélection unique */}
                 <label className="checkbox-label">
-                  <input type="checkbox" value={option} />
+                  <input
+                    type="radio"
+                    name="distortionOption"
+                    value={option}
+                    checked={distortionOption === option}
+                    onChange={() => handleDistortionOptionChange(option)}
+                  />
                   {option === "centre claire" ? "Centre claire" : "Centre dense"}
                 </label>
-                {hoveredOption === option && (
+                {hoveredOption === option && distortionImages[option] && (
                   <div style={{
                     position: "absolute",
                     top: "100%",

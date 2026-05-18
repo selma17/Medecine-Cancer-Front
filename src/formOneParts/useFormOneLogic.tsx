@@ -4,15 +4,14 @@ import { useScanStore } from "../../src/store/useScanStore";
 export const useFormOneLogic = (navigate: (path: string) => void) => {
   const { setFormOneData } = useScanStore();
 
-  // États pour différents champs
   const [selected, setSelected] = useState<string[]>([]);
   const [massNumber, setMassNumber] = useState<string>("");
   const [localisations, setLocalisations] = useState<string[]>([]);
-  const [distancesCentre, setDistancesCentre] = useState<string[]>([]);
   const [seins, setSeins] = useState<("gauche" | "droite")[]>([]);
   const [asymmetry, setAsymmetry] = useState<string>("");
-  const [asymmetryDetails, setAsymmetryDetails] = useState<string[]>([]); // Track selected asymmetry details
+  const [asymmetryDetails, setAsymmetryDetails] = useState<string[]>([]);
   const [distortion, setDistortion] = useState<string>("");
+  const [distortionOption, setDistortionOption] = useState<string>("");  // ← sélection unique
   const [calcifications, setCalcifications] = useState<string>("");
   const [signsAssociated, setSignsAssociated] = useState<string[]>([]);
   const [hoveredOption, setHoveredOption] = useState<string>("");
@@ -22,44 +21,37 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   const [suspecteSelected, setSuspecteSelected] = useState<string[]>([]);
   const [hoveredCalcificationOption, setHoveredCalcificationOption] = useState<string>("");
   const [distributionMicrocalcifications, setDistributionMicrocalcifications] = useState<string[]>([]);
-  const [formes, setFormes] = useState<string[]>([]); // Mass shapes
-  const [contours, setContours] = useState<string[]>([]); // Mass contours
-  const [densites, setDensites] = useState<string[]>([]); // Mass densities
+  const [formes, setFormes] = useState<string[]>([]);
+  const [contours, setContours] = useState<string[]>([]);
+  const [densites, setDensites] = useState<string[]>([]);
 
   const handleCheckboxChange = (value: string) => {
     setSelected((prev) =>
       prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
     );
   };
+
   const handleLocalisationChange = (index: number, value: string) => {
     setLocalisations((prev) => {
-      const newLocalisations = [...prev];
-      newLocalisations[index] = value;
-      return newLocalisations;
-    });
-  };
-
-  const handleDistanceCentreChange = (index: number, value: string) => {
-    setDistancesCentre((prev) => {
-      const newDistances = [...prev];
-      newDistances[index] = value;
-      return newDistances;
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
     });
   };
 
   const handleSeinChange = (index: number, value: "gauche" | "droite") => {
     setSeins((prev) => {
-      const newSeins = [...prev];
-      newSeins[index] = value;
-      return newSeins;
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
     });
   };
+
   const handleAsymmetryChange = (value: string) => {
     setAsymmetry(value);
-    if (value === "non") {
-      setAsymmetryDetails([]); // Clear details if asymmetry is "non"
-    }
+    if (value === "non") setAsymmetryDetails([]);
   };
+
   const handleAsymmetryDetailsChange = (value: string) => {
     setAsymmetryDetails((prev) =>
       prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
@@ -69,6 +61,12 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   const handleDistortionChange = (value: string) => {
     setDistortion(value);
     setShowDistortionOptions(value === "oui");
+    if (value === "non") setDistortionOption("");
+  };
+
+  // Sélection unique pour l'option de distorsion
+  const handleDistortionOptionChange = (value: string) => {
+    setDistortionOption(value);
   };
 
   const handleCalcificationsChange = (value: string) => {
@@ -81,11 +79,7 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   };
 
   const handleTypeCalcificationChange = (value: string) => {
-    if (typeCalcification === value) {
-      setTypeCalcification("");
-    } else {
-      setTypeCalcification(value);
-    }
+    setTypeCalcification(typeCalcification === value ? "" : value);
   };
 
   const handleBenigneCheckboxChange = (value: string) => {
@@ -107,49 +101,32 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
       prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
     );
   };
+
   const handleDistributionChange = (option: string) => {
     setDistributionMicrocalcifications((prev) =>
-      prev.includes(option)
-        ? prev.filter((item) => item !== option)
-        : [...prev, option]
+      prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
     );
   };
-    // Handle mass number changes and reset related state
+
   const handleMassNumberChange = (value: string) => {
-      setMassNumber(value);
-      const numberOfMasses = Number(value);
-  
-          // Reset states for all new masses when number of masses changes
+    setMassNumber(value);
+    const numberOfMasses = Number(value);
     setLocalisations(new Array(numberOfMasses).fill(""));
-    setDistancesCentre(new Array(numberOfMasses).fill(""));
     setSeins(new Array(numberOfMasses).fill("gauche"));
     setFormes(new Array(numberOfMasses).fill(""));
     setContours(new Array(numberOfMasses).fill(""));
     setDensites(new Array(numberOfMasses).fill(""));
-    };
- 
-  const handleMassesDataChange = (index: number, type: "forme" | "contour" | "densite", value: string) => {
-    if (type === "forme") {
-      setFormes((prev) => {
-        const newFormes = [...prev];
-        newFormes[index] = value;
-        return newFormes;
-      });
-    } else if (type === "contour") {
-      setContours((prev) => {
-        const newContours = [...prev];
-        newContours[index] = value;
-        return newContours;
-      });
-    } else if (type === "densite") {
-      setDensites((prev) => {
-        const newDensites = [...prev];
-        newDensites[index] = value;
-        return newDensites;
-      });
-    }
   };
 
+  const handleMassesDataChange = (index: number, type: "forme" | "contour" | "densite", value: string) => {
+    if (type === "forme") {
+      setFormes((prev) => { const u = [...prev]; u[index] = value; return u; });
+    } else if (type === "contour") {
+      setContours((prev) => { const u = [...prev]; u[index] = value; return u; });
+    } else if (type === "densite") {
+      setDensites((prev) => { const u = [...prev]; u[index] = value; return u; });
+    }
+  };
 
   const steps = [
     { title: "Mammographie", status: "in-progress" as const },
@@ -157,11 +134,9 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     { title: "Conclusion", status: "pending" as const },
   ];
 
-  // Fonction pour passer aux étapes suivantes
   const handleNextClick = () => {
     const massesMammographie = localisations.map((localisation, index) => ({
       localisation,
-      distanceCentre: distancesCentre[index] || "",
       sein: seins[index] || "gauche",
       forme: formes[index] || "",
       contours: contours[index] || "",
@@ -169,20 +144,19 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     }));
 
     setFormOneData({
-  densiteMammaire: selected.length > 0 ? selected.join(", ") : null,
-  massesMammographie: massesMammographie.length > 0 ? massesMammographie : null,
-  asymetrie: asymmetry === "oui" ? true : null,
-  typeAsymetrie: asymmetry === "oui" ? asymmetryDetails.join(", ") : null,
-  distorsionArchitecturale: distortion === "oui" ? true : null,
-  optionDistorsionArchitecturale: distortion === "oui" ? "Aucune" : null,
-  calcifications: calcifications === "oui" ? true : null,
-  typesCalcifications: typeCalcification || null,
-  signesAssociesMammographie: signsAssociated.length > 0 ? signsAssociated : null, // 🔥 Correction ici
-  calcificationsBenignes: benigneSelected.length > 0 ? benigneSelected.join(", ") : null,
-  calcificationsSuspectes: suspecteSelected.length > 0 ? suspecteSelected.join(", ") : null,
-  distributionMicrocalcifications: distributionMicrocalcifications.length > 0 ? distributionMicrocalcifications.join(", ") : null,
-});
-
+      densiteMammaire: selected.length > 0 ? selected.join(", ") : null,
+      massesMammographie: massesMammographie.length > 0 ? massesMammographie : null,
+      asymetrie: asymmetry === "oui" ? true : null,
+      typeAsymetrie: asymmetry === "oui" ? asymmetryDetails.join(", ") : null,
+      distorsionArchitecturale: distortion === "oui" ? true : null,
+      optionDistorsionArchitecturale: distortion === "oui" ? distortionOption : null,
+      calcifications: calcifications === "oui" ? true : null,
+      typesCalcifications: typeCalcification || null,
+      signesAssociesMammographie: signsAssociated.length > 0 ? signsAssociated : null,
+      calcificationsBenignes: benigneSelected.length > 0 ? benigneSelected.join(", ") : null,
+      calcificationsSuspectes: suspecteSelected.length > 0 ? suspecteSelected.join(", ") : null,
+      distributionMicrocalcifications: distributionMicrocalcifications.length > 0 ? distributionMicrocalcifications.join(", ") : null,
+    });
 
     navigate("/formtwo");
   };
@@ -191,10 +165,8 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     massNumber,
     setMassNumber: handleMassNumberChange,
     localisations,
-    distancesCentre,
     seins,
     handleLocalisationChange,
-    handleDistanceCentreChange,
     handleSeinChange,
     formes,
     setFormes,
@@ -207,12 +179,14 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     steps,
     selected,
     asymmetry,
-    asymmetryDetails, // Exposer les détails d'asymétrie
+    asymmetryDetails,
     handleAsymmetryChange,
     handleAsymmetryDetailsChange,
     distortion,
     handleDistortionChange,
     showDistortionOptions,
+    distortionOption,
+    handleDistortionOptionChange,
     calcifications,
     handleCalcificationsChange,
     typeCalcification,
@@ -229,11 +203,7 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     signsAssociated,
     handleSignsAssociatedChange,
     distributionMicrocalcifications,
-    handleDistributionChange, 
-    handleCheckboxChange: (value: string) => {
-      setSelected((prev) =>
-        prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
-      );
-    },
+    handleDistributionChange,
+    handleCheckboxChange,
   };
 };

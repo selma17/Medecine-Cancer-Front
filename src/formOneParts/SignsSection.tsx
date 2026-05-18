@@ -18,7 +18,7 @@ const SignsSection: React.FC<Props> = ({
 
   return (
     <div className="content">
-      <p className="title">Signes associés"(non obligatoire/multi choix)"</p>
+      <p className="title">Signes associés</p>
       <div className="options">
         {options.map((option) => (
           <label key={option} className="checkbox-label">
