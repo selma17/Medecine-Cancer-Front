@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { ROUTES } from './navigation/navigationConfig';
-import { getAllPatients, deleteScan, Patient } from './services/patientService';
+import { getAllPatients, deletePatient, Patient } from './services/patientService';
 import { toast } from 'sonner';
 import MedicalReport from './formThreeParts/MedicalReport';
 import axios from 'axios';
@@ -46,10 +46,10 @@ const PatientManagement: React.FC = () => {
 
   const handleDelete = async (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    if (!patient?.scanId) return;
+    if (!patient?.scanId && !patient?.clientId) return;
     if (!window.confirm(`Supprimer ${patient.nom} ${patient.prenom} ?`)) return;
     try {
-      await deleteScan(patient.scanId);
+      await deletePatient(patient.scanId, patient.clientId);
       toast.success('Patient supprimé');
       await loadPatients();
     } catch {
@@ -135,8 +135,7 @@ const PatientManagement: React.FC = () => {
   ];
 
   const SidebarContent = () => (
-    <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", height: "100vh" }}>
-      {/* Logo + Nom */}
+    <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", minHeight: "100%", height: "100%" }}>
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img
@@ -358,7 +357,7 @@ const PatientManagement: React.FC = () => {
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .sidebar-desktop-wrapper { display: flex; }
+        .sidebar-desktop-wrapper { display: flex; align-self: stretch; }
         .burger-btn { display: none !important; }
         @media (max-width: 768px) {
           .sidebar-desktop-wrapper { display: none !important; }

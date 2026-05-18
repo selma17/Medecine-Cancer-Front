@@ -39,30 +39,29 @@ export interface ClientResponse {
 // Récupère les patients du médecin connecté
 export const getAllPatients = async (): Promise<Patient[]> => {
   try {
-    // 1. Récupérer les clients du médecin
     const clientsResponse = await axios.get<ClientResponse[]>(
       `${API_BASE_URL}/clients/by-medecin`
     );
     const clients = clientsResponse.data;
     if (!clients || clients.length === 0) return [];
 
-    // 2. Récupérer tous les scans
     const scansResponse = await axios.get<MammaryScanResponse[]>(
       `${API_BASE_URL}/mammary-scan/all`
     );
     const allScans = scansResponse.data;
 
-    // 3. Construire un Set des IDs clients du médecin
     const clientIds = new Set(clients.map((c) => c.id));
-
-    // 4. Filtrer les scans appartenant aux clients du médecin
     const myScans = allScans.filter(
       (scan) => scan.client && clientIds.has(scan.client.id)
     );
 
-    // 5. Si aucun scan, afficher quand même les clients sans scan
-    if (myScans.length === 0) {
-      return clients.map((client) => ({
+    // Clients avec scan
+    const clientsWithScan = new Set(myScans.map(s => s.client.id));
+
+    // Clients sans scan — affichés mais supprimables via clientId
+    const clientsWithoutScan: Patient[] = clients
+      .filter(c => !clientsWithScan.has(c.id))
+      .map(client => ({
         id: `client-${client.id}`,
         nom: client.nom,
         prenom: client.prenom,
@@ -71,10 +70,9 @@ export const getAllPatients = async (): Promise<Patient[]> => {
         clientId: client.id,
         dateCreation: new Date().toISOString(),
       }));
-    }
 
-    // 6. Transformer les scans en patients
-    const patients: Patient[] = myScans.map((scan) => ({
+    // Clients avec scan
+    const patientsWithScan: Patient[] = myScans.map((scan) => ({
       id: `scan-${scan.id}`,
       nom: scan.client?.nom || 'N/A',
       prenom: scan.client?.prenom || 'N/A',
@@ -85,7 +83,8 @@ export const getAllPatients = async (): Promise<Patient[]> => {
       dateCreation: new Date().toISOString(),
     }));
 
-    return patients.sort((a, b) => (b.scanId || 0) - (a.scanId || 0));
+    const all = [...patientsWithScan, ...clientsWithoutScan];
+    return all.sort((a, b) => (b.scanId || 0) - (a.scanId || 0));
   } catch (error) {
     console.error('Erreur:', error);
     throw error;
@@ -99,6 +98,17 @@ export const getScanById = async (scanId: number): Promise<MammaryScanResponse> 
   return response.data;
 };
 
+// Supprime le scan ET le client
+export const deletePatient = async (scanId?: number, clientId?: number): Promise<void> => {
+  if (scanId) {
+    await axios.delete(`${API_BASE_URL}/mammary-scan/delete/${scanId}`);
+  }
+  if (clientId) {
+    await axios.delete(`${API_BASE_URL}/clients/${clientId}`);
+  }
+};
+
+// Garde deleteScan pour compatibilité
 export const deleteScan = async (scanId: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/mammary-scan/delete/${scanId}`);
 };

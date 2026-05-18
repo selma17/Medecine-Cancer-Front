@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const SidebarContent = () => (
-    <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", height: "100vh" }}>
+    <aside style={{ width: "240px", background: "#1B2B6B", display: "flex", flexDirection: "column", minHeight: "100%", height: "100%" }}>
       {/* Logo + Nom */}
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -246,7 +246,7 @@ const Dashboard: React.FC = () => {
 
       <style>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        .sidebar-desktop-wrapper { display: flex; }
+        .sidebar-desktop-wrapper { display: flex; align-self: stretch; }
         .burger-btn { display: none !important; }
         @media (max-width: 768px) {
           .sidebar-desktop-wrapper { display: none !important; }
