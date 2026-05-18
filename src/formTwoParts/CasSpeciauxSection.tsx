@@ -2,7 +2,7 @@ import React from "react";
 
 interface Props {
   casSpeciaux: string[];
-  handleCasSpeciauxChange: (selected: string[]) => void; // Correction ici
+  handleCasSpeciauxChange: (selected: string[]) => void;
   localisations: { [key: string]: string };
   handleLocalisationChange: (key: string, value: string) => void;
 }
@@ -34,9 +34,7 @@ const CasSpeciauxSection: React.FC<Props> = ({
 
   return (
     <div className="additional-section border rounded-lg mt-6 p-4 bg-section">
-      <p className="form-label mb-2">
-        Cas spéciaux avec un seul diagnostic "(non obl/multi choix)"
-      </p>
+      <p className="form-label mb-2">Cas spéciaux</p>
       {specialCases.map((specialCase) => (
         <div key={specialCase} className="mb-4">
           <label className="checkbox-label">
@@ -55,9 +53,7 @@ const CasSpeciauxSection: React.FC<Props> = ({
               className="input-field mt-2 ml-4 block"
               placeholder={`Localisation pour "${specialCase}"`}
               value={localisations[specialCase] || ""}
-              onChange={(e) =>
-                handleLocalisationChange(specialCase, e.target.value)
-              }
+              onChange={(e) => handleLocalisationChange(specialCase, e.target.value)}
             />
           )}
         </div>

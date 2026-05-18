@@ -2,7 +2,7 @@ import React from "react";
 
 interface Props {
   signesAssocies: string[];
-  handleSignesAssociesChange: (selected: string[]) => void; // Correction ici
+  handleSignesAssociesChange: (selected: string[]) => void;
 }
 
 const SignesAssociesSection: React.FC<Props> = ({ signesAssocies, handleSignesAssociesChange }) => {
@@ -26,7 +26,7 @@ const SignesAssociesSection: React.FC<Props> = ({ signesAssocies, handleSignesAs
 
   return (
     <div className="additional-section border rounded-lg mt-6 p-4 bg-section">
-      <p className="form-label mb-2">Signes associés"(non obl/multi choix)"</p>
+      <p className="form-label mb-2">Signes associés</p>
       {options.map((sign) => (
         <label key={sign} className="checkbox-label">
           <input
