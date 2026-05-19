@@ -8,18 +8,18 @@ const FormThree: React.FC = () => {
   const navigate = useNavigate();
   const {
     steps, conduiteIA, acrScore, loadingIA,
+    acrDroit, acrGauche, recommandationDroit, recommandationGauche,
     scanData, showMedicalReport, openMedicalReport, closeMedicalReport,
   } = useFormThreeLogic(navigate);
 
+  // ── Helpers couleur / label ──────────────────────────────────────────────
   const getAcrColor = (score: string) => {
-    const map: { [k: string]: string } = {
-      "1": "#16a34a", "2": "#16a34a",
-      "3": "#f97316",
-      "4": "#e11d48", "4A": "#f97316",
-      "4B": "#e11d48", "4C": "#dc2626",
-      "5": "#7c2d12"
-    };
-    return map[score] || "#64748b";
+    if (!score) return "#64748b";
+    const n = parseInt(score[0]);
+    if (n <= 2) return "#16a34a";
+    if (n === 3) return "#f97316";
+    if (n === 4) return "#e11d48";
+    return "#7c2d12";
   };
 
   const getAcrLabel = (score: string) => {
@@ -27,23 +27,27 @@ const FormThree: React.FC = () => {
       "1": "Normal",
       "2": "Probablement bénin",
       "3": "Surveillance recommandée",
-      "4": "Très suspect", "4A": "Faible suspicion de malignité",
+      "4": "Très suspect",
+      "4A": "Faible suspicion de malignité",
       "4B": "Suspicion intermédiaire",
       "4C": "Suspicion modérément élevée",
-      "5": "Hautement suspect"
+      "5": "Hautement suspect",
     };
     return map[score] || "Non défini";
   };
 
   const getConduiteIcon = (conduite: string) => {
     if (conduite?.toLowerCase().includes("surveillance"))
-      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+      return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
     if (conduite?.toLowerCase().includes("biopsie"))
-      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
+      return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
     if (conduite?.toLowerCase().includes("ablation"))
-      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-    return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+      return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+    return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
   };
+
+  // ── Détermine si on a des résultats par sein ─────────────────────────────
+  const hasPerBreast = !!(acrDroit || acrGauche);
 
   return (
     <>
@@ -97,18 +101,52 @@ const FormThree: React.FC = () => {
           0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
           40% { transform: scale(1.2); opacity: 1; }
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 768px) { .form3-body { padding: 1rem; } }
+        .sein-grid {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+          margin-bottom: 1.5rem;
+        }
+        .sein-card {
+          border-radius: 12px; border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+        .sein-card-header {
+          padding: 8px 12px; font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.5px;
+          color: white; text-align: center;
+        }
+        .sein-card-body { padding: 12px; background: #F8FAFC; }
+        .sein-acr-circle {
+          width: 52px; height: 52px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 8px; flex-shrink: 0;
+        }
+        .sein-reco {
+          font-size: 11px; color: #475569; text-align: center;
+          margin-top: 6px; line-height: 1.4;
+        }
+        .global-acr-row {
+          display: flex; align-items: center; gap: 1.25rem;
+          background: #F8FAFC; border-radius: 12px;
+          padding: 1.25rem; border: 1px solid #e2e8f0;
+          margin-bottom: 1.5rem;
+        }
+        @media (max-width: 480px) {
+          .sein-grid { grid-template-columns: 1fr; }
+          .form3-body { padding: 1rem; }
+        }
       `}</style>
 
       <div className="form3-page">
         {/* Topbar */}
         <div className="form3-topbar">
-          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "14px", fontFamily: "inherit", padding: 0 }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "14px", fontFamily: "inherit", padding: 0 }}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
             Retour
           </button>
@@ -151,35 +189,109 @@ const FormThree: React.FC = () => {
               ) : (
                 <div style={{ animation: "fadeInUp 0.4s ease both" }}>
 
-                  {/* Résultat ACR */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>Résultat ACR</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", background: "#F8FAFC", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e2e8f0" }}>
-                      {/* Score circle */}
-                      <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: getAcrColor(acrScore), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <span style={{ fontSize: "30px", fontWeight: "700", color: "white" }}>{acrScore || "—"}</span>
-                      </div>
-                      <div>
-                        <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Score BI-RADS / ACR</p>
-                        <p style={{ fontSize: "18px", fontWeight: "700", color: getAcrColor(acrScore), margin: "0 0 6px" }}>
-                          {getAcrLabel(acrScore)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action recommandée */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>Action Recommandée</p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "#F0FDF4", borderRadius: "12px", padding: "1.25rem", border: "1px solid #BBF7D0" }}>
-                      <div style={{ color: "#15803d", flexShrink: 0 }}>
-                        {getConduiteIcon(conduiteIA)}
-                      </div>
-                      <p style={{ fontSize: "16px", fontWeight: "600", color: "#15803d", margin: 0 }}>
-                        {conduiteIA || "—"}
+                  {/* ── Résultats par sein (si disponibles) ── */}
+                  {hasPerBreast ? (
+                    <>
+                      <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
+                        Résultats par sein
                       </p>
-                    </div>
-                  </div>
+
+                      <div className="sein-grid">
+                        {/* Sein droit */}
+                        <div className="sein-card">
+                          <div className="sein-card-header" style={{ background: acrDroit ? getAcrColor(acrDroit) : "#94a3b8" }}>
+                            Sein Droit
+                          </div>
+                          <div className="sein-card-body">
+                            {acrDroit ? (
+                              <>
+                                <div className="sein-acr-circle" style={{ background: getAcrColor(acrDroit) }}>
+                                  <span style={{ fontSize: "22px", fontWeight: "700", color: "white" }}>{acrDroit}</span>
+                                </div>
+                                <p style={{ fontSize: "12px", fontWeight: "700", color: getAcrColor(acrDroit), textAlign: "center", margin: 0 }}>
+                                  {getAcrLabel(acrDroit)}
+                                </p>
+                                {recommandationDroit && (
+                                  <div className="sein-reco">
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "8px", color: getAcrColor(acrDroit) }}>
+                                      {getConduiteIcon(recommandationDroit)}
+                                      <span style={{ fontSize: "12px", fontWeight: "600" }}>{recommandationDroit}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <p style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", fontStyle: "italic", margin: 0 }}>Normal / Non évalué</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Sein gauche */}
+                        <div className="sein-card">
+                          <div className="sein-card-header" style={{ background: acrGauche ? getAcrColor(acrGauche) : "#94a3b8" }}>
+                            Sein Gauche
+                          </div>
+                          <div className="sein-card-body">
+                            {acrGauche ? (
+                              <>
+                                <div className="sein-acr-circle" style={{ background: getAcrColor(acrGauche) }}>
+                                  <span style={{ fontSize: "22px", fontWeight: "700", color: "white" }}>{acrGauche}</span>
+                                </div>
+                                <p style={{ fontSize: "12px", fontWeight: "700", color: getAcrColor(acrGauche), textAlign: "center", margin: 0 }}>
+                                  {getAcrLabel(acrGauche)}
+                                </p>
+                                {recommandationGauche && (
+                                  <div className="sein-reco">
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "8px", color: getAcrColor(acrGauche) }}>
+                                      {getConduiteIcon(recommandationGauche)}
+                                      <span style={{ fontSize: "12px", fontWeight: "600" }}>{recommandationGauche}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <p style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", fontStyle: "italic", margin: 0 }}>Normal / Non évalué</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Score global */}
+                      <div style={{ background: "#F1F5F9", borderRadius: "10px", padding: "10px 14px", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px", border: "1px solid #e2e8f0" }}>
+                        <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>Score global :</span>
+                        <span style={{ background: getAcrColor(acrScore), color: "white", borderRadius: "6px", padding: "2px 10px", fontWeight: "700", fontSize: "13px" }}>
+                          ACR {acrScore}
+                        </span>
+                        <span style={{ fontSize: "12px", color: "#475569" }}>{conduiteIA}</span>
+                      </div>
+                    </>
+                  ) : (
+                    /* ── Fallback : affichage global uniquement ── */
+                    <>
+                      <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
+                        Résultat ACR
+                      </p>
+                      <div className="global-acr-row">
+                        <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: getAcrColor(acrScore), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontSize: "30px", fontWeight: "700", color: "white" }}>{acrScore || "—"}</span>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "11px", color: "#64748b", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Score BI-RADS / ACR</p>
+                          <p style={{ fontSize: "18px", fontWeight: "700", color: getAcrColor(acrScore), margin: "0 0 6px" }}>
+                            {getAcrLabel(acrScore)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
+                        Action Recommandée
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "#F0FDF4", borderRadius: "12px", padding: "1.25rem", border: "1px solid #BBF7D0", marginBottom: "1.5rem" }}>
+                        <div style={{ color: "#15803d", flexShrink: 0 }}>{getConduiteIcon(conduiteIA)}</div>
+                        <p style={{ fontSize: "16px", fontWeight: "600", color: "#15803d", margin: 0 }}>{conduiteIA || "—"}</p>
+                      </div>
+                    </>
+                  )}
 
                   {/* Bouton voir rapport */}
                   <button
@@ -196,7 +308,7 @@ const FormThree: React.FC = () => {
               )}
             </div>
 
-            {/* Footer — Enregistrer et terminer → dashboard directement */}
+            {/* Footer */}
             {!loadingIA && (
               <div style={{ padding: "1.25rem 1.75rem", borderTop: "1px solid #e2e8f0" }}>
                 <button
