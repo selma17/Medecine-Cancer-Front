@@ -14,16 +14,23 @@ const FormThree: React.FC = () => {
   const getAcrColor = (score: string) => {
     const map: { [k: string]: string } = {
       "1": "#16a34a", "2": "#16a34a",
-      "3": "#f97316", "4": "#e11d48", "5": "#7c2d12"
+      "3": "#f97316",
+      "4": "#e11d48", "4A": "#f97316",
+      "4B": "#e11d48", "4C": "#dc2626",
+      "5": "#7c2d12"
     };
     return map[score] || "#64748b";
   };
 
   const getAcrLabel = (score: string) => {
     const map: { [k: string]: string } = {
-      "1": "Normal", "2": "Probablement bénin",
+      "1": "Normal",
+      "2": "Probablement bénin",
       "3": "Surveillance recommandée",
-      "4": "Très suspect", "5": "Hautement suspect"
+      "4": "Très suspect", "4A": "Faible suspicion de malignité",
+      "4B": "Suspicion intermédiaire",
+      "4C": "Suspicion modérément élevée",
+      "5": "Hautement suspect"
     };
     return map[score] || "Non défini";
   };
