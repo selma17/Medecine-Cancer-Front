@@ -19,6 +19,8 @@ interface Props {
   handleCalcificationLeave: () => void;
   distributionMicrocalcifications: string[];
   handleDistributionChange: (value: string) => void;
+  calcificationLocalisation: string;
+  handleCalcificationLocalisationChange: (value: string) => void;
 }
 
 const benigneCalcifications: CalcificationItem[] = [
@@ -48,6 +50,18 @@ const distributionOptions: CalcificationItem[] = [
   { value: "linéaires", image: "/dist-groupe.png" },
 ];
 
+const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
+  <div style={{
+    position: "absolute", top: "100%", left: 0, zIndex: 100,
+    background: "white", border: "1px solid #e2e8f0",
+    borderRadius: "8px", padding: "6px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.15)", marginTop: "4px"
+  }}>
+    <img src={src} alt={alt} style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
+    <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>{alt}</p>
+  </div>
+);
+
 const CalcificationSection: React.FC<Props> = ({
   calcifications = "non",
   handleCalcificationsChange,
@@ -62,6 +76,8 @@ const CalcificationSection: React.FC<Props> = ({
   handleCalcificationLeave,
   distributionMicrocalcifications = [],
   handleDistributionChange,
+  calcificationLocalisation,
+  handleCalcificationLocalisationChange,
 }) => {
   return (
     <div className="calcification-section">
@@ -71,9 +87,7 @@ const CalcificationSection: React.FC<Props> = ({
           {["oui", "non"].map((option) => (
             <label key={option} className="radio-label">
               <input
-                type="radio"
-                name="calcifications"
-                value={option}
+                type="radio" name="calcifications" value={option}
                 checked={calcifications === option}
                 onChange={() => handleCalcificationsChange(option)}
               />
@@ -85,15 +99,25 @@ const CalcificationSection: React.FC<Props> = ({
 
       {calcifications === "oui" && (
         <>
+          {/* Localisation des calcifications */}
+          <div className="section">
+            <h3 className="section-title">Localisation des calcifications</h3>
+            <input
+              type="text"
+              placeholder="ex: QSE gauche, QII droit, 3H sein gauche..."
+              value={calcificationLocalisation}
+              onChange={(e) => handleCalcificationLocalisationChange(e.target.value)}
+              className="text-input"
+            />
+          </div>
+
           <div className="section">
             <h3 className="section-title">Types de calcifications</h3>
             <div className="radio-group">
               {["bénigne", "suspecte"].map((type) => (
                 <label key={type} className="radio-label">
                   <input
-                    type="radio"
-                    name="typeCalcification"
-                    value={type}
+                    type="radio" name="typeCalcification" value={type}
                     checked={typeCalcification === type}
                     onChange={() => handleTypeCalcificationChange(type)}
                   />
@@ -108,43 +132,19 @@ const CalcificationSection: React.FC<Props> = ({
               <h3 className="section-title">Calcifications bénignes</h3>
               <div className="checkbox-grid">
                 {benigneCalcifications.map((item) => (
-                  <div
-                    key={item.value}
-                    className="checkbox-item"
-                    style={{ position: "relative" }}
+                  <div key={item.value} className="checkbox-item" style={{ position: "relative" }}
                     onMouseEnter={() => setHoveredCalcificationOption(item.value)}
                     onMouseLeave={handleCalcificationLeave}
                   >
                     <label className="checkbox-label">
-                      <input
-                        type="checkbox"
+                      <input type="checkbox"
                         checked={benigneSelected.includes(item.value)}
                         onChange={() => handleBenigneCheckboxChange(item.value)}
                       />
                       <span>{item.value}</span>
                     </label>
                     {hoveredCalcificationOption === item.value && (
-                      <div style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        zIndex: 100,
-                        background: "white",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "8px",
-                        padding: "6px",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                        marginTop: "4px"
-                      }}>
-                        <img
-                          src={item.image}
-                          alt={item.value}
-                          style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
-                        />
-                        <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
-                          {item.value}
-                        </p>
-                      </div>
+                      <HoverImage src={item.image} alt={item.value} />
                     )}
                   </div>
                 ))}
@@ -158,43 +158,19 @@ const CalcificationSection: React.FC<Props> = ({
                 <h3 className="section-title">Calcifications suspectes</h3>
                 <div className="checkbox-grid">
                   {suspecteCalcifications.map((item) => (
-                    <div
-                      key={item.value}
-                      className="checkbox-item"
-                      style={{ position: "relative" }}
+                    <div key={item.value} className="checkbox-item" style={{ position: "relative" }}
                       onMouseEnter={() => setHoveredCalcificationOption(item.value)}
                       onMouseLeave={handleCalcificationLeave}
                     >
                       <label className="checkbox-label">
-                        <input
-                          type="checkbox"
+                        <input type="checkbox"
                           checked={suspecteSelected.includes(item.value)}
                           onChange={() => handleSuspecteCheckboxChange(item.value)}
                         />
                         <span>{item.value}</span>
                       </label>
                       {hoveredCalcificationOption === item.value && (
-                        <div style={{
-                          position: "absolute",
-                          top: "100%",
-                          left: 0,
-                          zIndex: 100,
-                          background: "white",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "8px",
-                          padding: "6px",
-                          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                          marginTop: "4px"
-                        }}>
-                          <img
-                            src={item.image}
-                            alt={item.value}
-                            style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
-                          />
-                          <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
-                            {item.value}
-                          </p>
-                        </div>
+                        <HoverImage src={item.image} alt={item.value} />
                       )}
                     </div>
                   ))}
@@ -206,43 +182,19 @@ const CalcificationSection: React.FC<Props> = ({
                   <h3 className="section-title">Distribution des microcalcifications</h3>
                   <div className="checkbox-grid">
                     {distributionOptions.map((item) => (
-                      <div
-                        key={item.value}
-                        className="checkbox-item"
-                        style={{ position: "relative" }}
+                      <div key={item.value} className="checkbox-item" style={{ position: "relative" }}
                         onMouseEnter={() => setHoveredCalcificationOption(`dist-${item.value}`)}
                         onMouseLeave={handleCalcificationLeave}
                       >
                         <label className="checkbox-label">
-                          <input
-                            type="checkbox"
+                          <input type="checkbox"
                             checked={distributionMicrocalcifications.includes(item.value)}
                             onChange={() => handleDistributionChange(item.value)}
                           />
                           {item.value.charAt(0).toUpperCase() + item.value.slice(1)}
                         </label>
                         {hoveredCalcificationOption === `dist-${item.value}` && (
-                          <div style={{
-                            position: "absolute",
-                            top: "100%",
-                            left: 0,
-                            zIndex: 100,
-                            background: "white",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "8px",
-                            padding: "6px",
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                            marginTop: "4px"
-                          }}>
-                            <img
-                              src={item.image}
-                              alt={item.value}
-                              style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
-                            />
-                            <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
-                              {item.value}
-                            </p>
-                          </div>
+                          <HoverImage src={item.image} alt={item.value} />
                         )}
                       </div>
                     ))}

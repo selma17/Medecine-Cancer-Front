@@ -241,6 +241,8 @@ const FormTwo: React.FC = () => {
                 />
               ))}
               <SignesAssociesSection
+                signesLocalisations={logic.signesLocalisations}
+                handleSigneLocalisationChange={logic.handleSigneLocalisationChange}
                 signesAssocies={logic.signesAssocies}
                 handleSignesAssociesChange={logic.handleSignesAssociesChange}
               />

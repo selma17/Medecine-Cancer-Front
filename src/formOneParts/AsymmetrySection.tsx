@@ -5,6 +5,8 @@ interface Props {
   handleAsymmetryChange: (value: string) => void;
   asymmetryDetails: string[];
   handleAsymmetryDetailsChange: (value: string) => void;
+  asymmetryLocalisation: string;
+  handleAsymmetryLocalisationChange: (value: string) => void;
 }
 
 const AsymmetrySection: React.FC<Props> = ({
@@ -12,31 +14,23 @@ const AsymmetrySection: React.FC<Props> = ({
   handleAsymmetryChange,
   asymmetryDetails,
   handleAsymmetryDetailsChange,
+  asymmetryLocalisation,
+  handleAsymmetryLocalisationChange,
 }) => {
-  const handleCheckboxChange = (value: string) => {
-    handleAsymmetryDetailsChange(value); // Mise à jour des détails de l'asymétrie
-  };
-
   return (
     <>
       <div className="content">
         <p className="title">Asymétrie si présente?</p>
         <div className="options">
           <label className="checkbox-label">
-            <input
-              type="radio"
-              name="asymmetry"
-              value="oui"
+            <input type="radio" name="asymmetry" value="oui"
               checked={asymmetry === "oui"}
               onChange={() => handleAsymmetryChange("oui")}
             />
             Oui
           </label>
           <label className="checkbox-label">
-            <input
-              type="radio"
-              name="asymmetry"
-              value="non"
+            <input type="radio" name="asymmetry" value="non"
               checked={asymmetry === "non"}
               onChange={() => handleAsymmetryChange("non")}
             />
@@ -45,24 +39,36 @@ const AsymmetrySection: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Check if asymmetry is "oui", then display the details form */}
       {asymmetry === "oui" && (
-        <div className="content">
-          <p className="title">Asymétrie détails</p>
-          <div className="options">
-            {["asymétrie", "globale", "focale", "évolutive"].map((option) => (
-              <label key={option} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  value={option}
-                  checked={asymmetryDetails.includes(option)} // Vérification si la valeur est sélectionnée
-                  onChange={() => handleCheckboxChange(option)} // Gestion du changement
-                />
-                {option}
-              </label>
-            ))}
+        <>
+          <div className="content">
+            <p className="title">Asymétrie détails</p>
+            <div className="options">
+              {["asymétrie", "globale", "focale", "évolutive"].map((option) => (
+                <label key={option} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    value={option}
+                    checked={asymmetryDetails.includes(option)}
+                    onChange={() => handleAsymmetryDetailsChange(option)}
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+
+          <div className="content">
+            <p className="title">Localisation de l'asymétrie</p>
+            <input
+              type="text"
+              placeholder="ex: QSE gauche, QSID droit..."
+              value={asymmetryLocalisation}
+              onChange={(e) => handleAsymmetryLocalisationChange(e.target.value)}
+              className="text-input"
+            />
+          </div>
+        </>
       )}
     </>
   );

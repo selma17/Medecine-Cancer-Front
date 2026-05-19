@@ -194,6 +194,8 @@ const FormOne: React.FC = () => {
               />
 
               <AsymmetrySection
+                asymmetryLocalisation={logic.asymmetryLocalisation}
+                handleAsymmetryLocalisationChange={logic.handleAsymmetryLocalisationChange}
                 asymmetry={logic.asymmetry}
                 handleAsymmetryChange={logic.handleAsymmetryChange}
                 asymmetryDetails={logic.asymmetryDetails}
@@ -202,16 +204,20 @@ const FormOne: React.FC = () => {
 
               {/* ✅ DistortionSection — avec les 2 nouvelles props */}
               <DistortionSection
+                distortionOption={logic.distortionOption}
+                handleDistortionOptionChange={logic.handleDistortionOptionChange}
+                distortionLocalisation={logic.distortionLocalisation}
+                handleDistortionLocalisationChange={logic.handleDistortionLocalisationChange}
                 distortion={logic.distortion}
                 handleDistortionChange={logic.handleDistortionChange}
                 showDistortionOptions={logic.showDistortionOptions}
-                distortionOption={logic.distortionOption}
-                handleDistortionOptionChange={logic.handleDistortionOptionChange}
                 hoveredOption={logic.hoveredOption}
                 setHoveredOption={logic.setHoveredOption}
               />
 
               <CalcificationSection
+                calcificationLocalisation={logic.calcificationLocalisation}
+                handleCalcificationLocalisationChange={logic.handleCalcificationLocalisationChange}
                 calcifications={logic.calcifications}
                 handleCalcificationsChange={logic.handleCalcificationsChange}
                 typeCalcification={logic.typeCalcification}
@@ -228,6 +234,8 @@ const FormOne: React.FC = () => {
               />
 
               <SignsSection
+                signsLocalisations={logic.signsLocalisations}
+                handleSignLocalisationChange={logic.handleSignLocalisationChange}
                 signsAssociated={logic.signsAssociated}
                 handleSignsAssociatedChange={logic.handleSignsAssociatedChange}
               />

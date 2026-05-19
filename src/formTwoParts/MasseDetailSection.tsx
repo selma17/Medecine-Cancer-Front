@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import BreastSchema from "../components/BreastSchema";
 
 interface Props {
   index: number;
@@ -23,49 +24,35 @@ interface Props {
   ) => void;
 }
 
-// Formes échographiques — nommer vos images ainsi dans public/
 const formesData = [
-  { value: "ovale",      image: "/echo-forme-ovale.png" },
-  { value: "ronde",      image: "/echo-forme-ronde.png" },
+  { value: "ovale", image: "/echo-forme-ovale.png" },
+  { value: "ronde", image: "/echo-forme-ronde.png" },
   { value: "irrégulière", image: "/echo-forme-irreguliere.png" },
 ];
 
-// Contours échographiques — nommer vos images ainsi dans public/
 const contoursData = [
-  { value: "circonscrits",  image: "/echo-contour-circonscrits.png" },
-  { value: "indistincts",   image: "/echo-contour-indistincts.png" },
-  { value: "anguleux",      image: "/echo-contour-anguleux.png" },
-  { value: "microlobulés",  image: "/echo-contour-microlobules.png" },
-  { value: "spiculés",      image: "/echo-contour-spicules.png" },
+  { value: "circonscrits", image: "/echo-contour-circonscrits.png" },
+  { value: "indistincts", image: "/echo-contour-indistincts.png" },
+  { value: "anguleux", image: "/echo-contour-anguleux.png" },
+  { value: "microlobulés", image: "/echo-contour-microlobules.png" },
+  { value: "spiculés", image: "/echo-contour-spicules.png" },
 ];
 
-// Orientations — nommer vos images ainsi dans public/
 const orientationsData = [
-  { value: "parallèle",     image: "/echo-orientation-parallele.png" },
+  { value: "parallèle", image: "/echo-orientation-parallele.png" },
   { value: "non parallèle", image: "/echo-orientation-non-parallele.png" },
 ];
 
-// Échostructure (anciennement "densité") — sans images
 const echostructuresData = [
-  "haute",
-  "isoéchogène",
-  "hypoéchogène",
-  "anéchogène",
-  "complexe",
+  "haute", "isoéchogène", "hypoéchogène", "anéchogène", "complexe",
 ];
 
 const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
   <div style={{
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    zIndex: 100,
-    background: "white",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    padding: "6px",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-    marginTop: "4px"
+    position: "absolute", top: "100%", left: 0, zIndex: 100,
+    background: "white", border: "1px solid #e2e8f0",
+    borderRadius: "8px", padding: "6px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.15)", marginTop: "4px"
   }}>
     <img src={src} alt={alt} style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
     <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>{alt}</p>
@@ -90,39 +77,20 @@ const MasseDetailSection: React.FC<Props> = ({
   return (
     <div className="additional-section border rounded-lg mt-4 p-4">
 
-      {/* Localisation */}
+      {/* BreastSchema — Montre mammaire */}
       <div className="form-radio-section">
-        <p className="form-label">Localisation</p>
-        <input type="text" value={localisation}
-          onChange={(e) => onLocalisationChange(index, e.target.value)}
-          className="form-input" placeholder="ex: 2H, QSID, UQSD..."
+        <p className="form-label">Localisation de la masse {index + 1}</p>
+        <BreastSchema
+          localisation={localisation}
+          distanceCentre={distanceCentre}
+          sein={sein}
+          onLocalisationChange={(value) => onLocalisationChange(index, value)}
+          onDistanceCentreChange={(value) => onDistanceCentreChange(index, value)}
+          onSeinChange={(value) => onSeinChange(index, value)}
         />
       </div>
 
-      {/* Distance du mamelon */}
-      <div className="form-radio-section mt-4">
-        <p className="form-label">Distance du mamelon (cm)</p>
-        <input type="text" value={distanceCentre}
-          onChange={(e) => onDistanceCentreChange(index, e.target.value)}
-          className="form-input" placeholder="ex: 2"
-        />
-      </div>
-
-      {/* Sein */}
-      <div className="form-radio-section mt-4">
-        <p className="form-label">Sein</p>
-        {["gauche", "droite"].map((s) => (
-          <label key={s} className="radio-label">
-            <input type="radio" name={`sein-${index}`}
-              checked={sein === s}
-              onChange={() => onSeinChange(index, s as "gauche" | "droite")}
-            />
-            {s}
-          </label>
-        ))}
-      </div>
-
-      {/* Mesure — accepte entier ou format NxN */}
+      {/* Mesure */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Mesure {index + 1} (mm)</p>
         <input
@@ -130,7 +98,6 @@ const MasseDetailSection: React.FC<Props> = ({
           value={mesure}
           onChange={(e) => {
             const val = e.target.value;
-            // Accepte chiffres, "x" ou "X" comme séparateur (clavier sans ×)
             if (/^[\d]*[xX]?[\d]*$/.test(val)) {
               onMesureChange(index, val.toLowerCase());
             }
@@ -143,9 +110,9 @@ const MasseDetailSection: React.FC<Props> = ({
         </p>
       </div>
 
-      {/* Forme — images échographiques */}
+      {/* Forme */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">Forme de la masse <span className="text-red-500 ml-1">*</span></p>
+        <p className="form-label">Forme <span className="text-red-500 ml-1">*</span></p>
         {formesData.map((item) => (
           <div key={item.value} style={{ position: "relative" }}
             onMouseEnter={() => setHoveredItem(`forme-${item.value}`)}
@@ -159,14 +126,12 @@ const MasseDetailSection: React.FC<Props> = ({
               />
               {item.value}
             </label>
-            {hoveredItem === `forme-${item.value}` && (
-              <HoverImage src={item.image} alt={item.value} />
-            )}
+            {hoveredItem === `forme-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
           </div>
         ))}
       </div>
 
-      {/* Contours — images échographiques */}
+      {/* Contours */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Contours <span className="text-red-500 ml-1">*</span></p>
         {contoursData.map((item) => (
@@ -182,14 +147,12 @@ const MasseDetailSection: React.FC<Props> = ({
               />
               {item.value}
             </label>
-            {hoveredItem === `contour-${item.value}` && (
-              <HoverImage src={item.image} alt={item.value} />
-            )}
+            {hoveredItem === `contour-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
           </div>
         ))}
       </div>
 
-      {/* Échostructure (anciennement Densité) — sans images */}
+      {/* Échostructure */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Échostructure <span className="text-red-500 ml-1">*</span></p>
         {echostructuresData.map((item) => (
@@ -204,7 +167,7 @@ const MasseDetailSection: React.FC<Props> = ({
         ))}
       </div>
 
-      {/* Orientation — avec images au survol */}
+      {/* Orientation */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Orientation</p>
         {orientationsData.map((item) => (
@@ -219,9 +182,7 @@ const MasseDetailSection: React.FC<Props> = ({
               />
               {item.value}
             </label>
-            {hoveredItem === `orientation-${item.value}` && (
-              <HoverImage src={item.image} alt={item.value} />
-            )}
+            {hoveredItem === `orientation-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
           </div>
         ))}
       </div>

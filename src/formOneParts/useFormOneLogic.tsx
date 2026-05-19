@@ -10,10 +10,14 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   const [seins, setSeins] = useState<("gauche" | "droite")[]>([]);
   const [asymmetry, setAsymmetry] = useState<string>("");
   const [asymmetryDetails, setAsymmetryDetails] = useState<string[]>([]);
+  const [asymmetryLocalisation, setAsymmetryLocalisation] = useState<string>("");
   const [distortion, setDistortion] = useState<string>("");
-  const [distortionOption, setDistortionOption] = useState<string>("");  // ← sélection unique
+  const [distortionOption, setDistortionOption] = useState<string>("");
+  const [distortionLocalisation, setDistortionLocalisation] = useState<string>("");
   const [calcifications, setCalcifications] = useState<string>("");
+  const [calcificationLocalisation, setCalcificationLocalisation] = useState<string>("");
   const [signsAssociated, setSignsAssociated] = useState<string[]>([]);
+  const [signsLocalisations, setSignsLocalisations] = useState<{ [key: string]: string }>({});
   const [hoveredOption, setHoveredOption] = useState<string>("");
   const [showDistortionOptions, setShowDistortionOptions] = useState<boolean>(false);
   const [typeCalcification, setTypeCalcification] = useState<string>("");
@@ -32,24 +36,16 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   };
 
   const handleLocalisationChange = (index: number, value: string) => {
-    setLocalisations((prev) => {
-      const updated = [...prev];
-      updated[index] = value;
-      return updated;
-    });
+    setLocalisations((prev) => { const u = [...prev]; u[index] = value; return u; });
   };
 
   const handleSeinChange = (index: number, value: "gauche" | "droite") => {
-    setSeins((prev) => {
-      const updated = [...prev];
-      updated[index] = value;
-      return updated;
-    });
+    setSeins((prev) => { const u = [...prev]; u[index] = value; return u; });
   };
 
   const handleAsymmetryChange = (value: string) => {
     setAsymmetry(value);
-    if (value === "non") setAsymmetryDetails([]);
+    if (value === "non") { setAsymmetryDetails([]); setAsymmetryLocalisation(""); }
   };
 
   const handleAsymmetryDetailsChange = (value: string) => {
@@ -58,25 +54,26 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     );
   };
 
+  const handleAsymmetryLocalisationChange = (value: string) => setAsymmetryLocalisation(value);
+
   const handleDistortionChange = (value: string) => {
     setDistortion(value);
     setShowDistortionOptions(value === "oui");
-    if (value === "non") setDistortionOption("");
+    if (value === "non") { setDistortionOption(""); setDistortionLocalisation(""); }
   };
 
-  // Sélection unique pour l'option de distorsion
-  const handleDistortionOptionChange = (value: string) => {
-    setDistortionOption(value);
-  };
+  const handleDistortionOptionChange = (value: string) => setDistortionOption(value);
+  const handleDistortionLocalisationChange = (value: string) => setDistortionLocalisation(value);
 
   const handleCalcificationsChange = (value: string) => {
     setCalcifications(value);
     if (value === "non") {
-      setTypeCalcification("");
-      setBenigneSelected([]);
-      setSuspecteSelected([]);
+      setTypeCalcification(""); setBenigneSelected([]); setSuspecteSelected([]);
+      setCalcificationLocalisation("");
     }
   };
+
+  const handleCalcificationLocalisationChange = (value: string) => setCalcificationLocalisation(value);
 
   const handleTypeCalcificationChange = (value: string) => {
     setTypeCalcification(typeCalcification === value ? "" : value);
@@ -97,9 +94,18 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   const handleCalcificationLeave = () => setHoveredCalcificationOption("");
 
   const handleSignsAssociatedChange = (value: string) => {
-    setSignsAssociated((prev) =>
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
-    );
+    setSignsAssociated((prev) => {
+      if (prev.includes(value)) {
+        const updated = prev.filter((item) => item !== value);
+        setSignsLocalisations((loc) => { const u = { ...loc }; delete u[value]; return u; });
+        return updated;
+      }
+      return [...prev, value];
+    });
+  };
+
+  const handleSignLocalisationChange = (sign: string, value: string) => {
+    setSignsLocalisations((prev) => ({ ...prev, [sign]: value }));
   };
 
   const handleDistributionChange = (option: string) => {
@@ -119,13 +125,9 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   };
 
   const handleMassesDataChange = (index: number, type: "forme" | "contour" | "densite", value: string) => {
-    if (type === "forme") {
-      setFormes((prev) => { const u = [...prev]; u[index] = value; return u; });
-    } else if (type === "contour") {
-      setContours((prev) => { const u = [...prev]; u[index] = value; return u; });
-    } else if (type === "densite") {
-      setDensites((prev) => { const u = [...prev]; u[index] = value; return u; });
-    }
+    if (type === "forme") setFormes((prev) => { const u = [...prev]; u[index] = value; return u; });
+    else if (type === "contour") setContours((prev) => { const u = [...prev]; u[index] = value; return u; });
+    else if (type === "densite") setDensites((prev) => { const u = [...prev]; u[index] = value; return u; });
   };
 
   const steps = [
@@ -143,19 +145,31 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
       densite: densites[index] || "",
     }));
 
+    // Construire les signes associés avec localisations
+    const signesAvecLocalisations = signsAssociated.map((sign) =>
+      signsLocalisations[sign] ? `${sign} (${signsLocalisations[sign]})` : sign
+    );
+
     setFormOneData({
       densiteMammaire: selected.length > 0 ? selected.join(", ") : null,
       massesMammographie: massesMammographie.length > 0 ? massesMammographie : null,
       asymetrie: asymmetry === "oui" ? true : null,
-      typeAsymetrie: asymmetry === "oui" ? asymmetryDetails.join(", ") : null,
+      typeAsymetrie: asymmetry === "oui"
+        ? `${asymmetryDetails.join(", ")}${asymmetryLocalisation ? ` — localisation: ${asymmetryLocalisation}` : ""}`
+        : null,
       distorsionArchitecturale: distortion === "oui" ? true : null,
-      optionDistorsionArchitecturale: distortion === "oui" ? distortionOption : null,
+      optionDistorsionArchitecturale: distortion === "oui"
+        ? `${distortionOption}${distortionLocalisation ? ` — localisation: ${distortionLocalisation}` : ""}`
+        : null,
       calcifications: calcifications === "oui" ? true : null,
-      typesCalcifications: typeCalcification || null,
-      signesAssociesMammographie: signsAssociated.length > 0 ? signsAssociated : null,
+      typesCalcifications: typeCalcification
+        ? `${typeCalcification}${calcificationLocalisation ? ` — localisation: ${calcificationLocalisation}` : ""}`
+        : null,
+      signesAssociesMammographie: signesAvecLocalisations.length > 0 ? signesAvecLocalisations : null,
       calcificationsBenignes: benigneSelected.length > 0 ? benigneSelected.join(", ") : null,
       calcificationsSuspectes: suspecteSelected.length > 0 ? suspecteSelected.join(", ") : null,
-      distributionMicrocalcifications: distributionMicrocalcifications.length > 0 ? distributionMicrocalcifications.join(", ") : null,
+      distributionMicrocalcifications: distributionMicrocalcifications.length > 0
+        ? distributionMicrocalcifications.join(", ") : null,
     });
 
     navigate("/formtwo");
@@ -168,42 +182,29 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     seins,
     handleLocalisationChange,
     handleSeinChange,
-    formes,
-    setFormes,
-    contours,
-    setContours,
-    densites,
-    setDensites,
+    formes, setFormes,
+    contours, setContours,
+    densites, setDensites,
     handleMassesDataChange,
     handleNextClick,
     steps,
     selected,
-    asymmetry,
-    asymmetryDetails,
-    handleAsymmetryChange,
-    handleAsymmetryDetailsChange,
-    distortion,
-    handleDistortionChange,
+    asymmetry, asymmetryDetails, asymmetryLocalisation,
+    handleAsymmetryChange, handleAsymmetryDetailsChange, handleAsymmetryLocalisationChange,
+    distortion, distortionOption, distortionLocalisation,
+    handleDistortionChange, handleDistortionOptionChange, handleDistortionLocalisationChange,
     showDistortionOptions,
-    distortionOption,
-    handleDistortionOptionChange,
-    calcifications,
-    handleCalcificationsChange,
-    typeCalcification,
-    handleTypeCalcificationChange,
-    benigneSelected,
-    handleBenigneCheckboxChange,
-    suspecteSelected,
-    handleSuspecteCheckboxChange,
-    hoveredOption,
-    setHoveredOption,
-    hoveredCalcificationOption,
-    setHoveredCalcificationOption,
+    calcifications, calcificationLocalisation,
+    handleCalcificationsChange, handleCalcificationLocalisationChange,
+    typeCalcification, handleTypeCalcificationChange,
+    benigneSelected, handleBenigneCheckboxChange,
+    suspecteSelected, handleSuspecteCheckboxChange,
+    hoveredOption, setHoveredOption,
+    hoveredCalcificationOption, setHoveredCalcificationOption,
     handleCalcificationLeave,
-    signsAssociated,
-    handleSignsAssociatedChange,
-    distributionMicrocalcifications,
-    handleDistributionChange,
+    signsAssociated, signsLocalisations,
+    handleSignsAssociatedChange, handleSignLocalisationChange,
+    distributionMicrocalcifications, handleDistributionChange,
     handleCheckboxChange,
   };
 };
