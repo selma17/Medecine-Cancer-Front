@@ -431,7 +431,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 <p style={{ fontSize: "11px", margin: "4px 0" }}>
                   <span className="mr-acr-badge">
                     ACR {scanData.resultats?.acrScore || "—"}
-                    {scanData.resultats?.acrType ? ` (Type ${scanData.resultats.acrType})` : ""}
                   </span>
                   <span className="mr-conduite">
                     {extractConduite(scanData.resultats?.conduiteATenir)}

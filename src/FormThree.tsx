@@ -7,7 +7,7 @@ import MedicalReport from "./formThreeParts/MedicalReport";
 const FormThree: React.FC = () => {
   const navigate = useNavigate();
   const {
-    steps, conduiteIA, acrType, acrScore, loadingIA,
+    steps, conduiteIA, acrScore, loadingIA,
     scanData, showMedicalReport, openMedicalReport, closeMedicalReport,
   } = useFormThreeLogic(navigate);
 
@@ -157,11 +157,6 @@ const FormThree: React.FC = () => {
                         <p style={{ fontSize: "18px", fontWeight: "700", color: getAcrColor(acrScore), margin: "0 0 6px" }}>
                           {getAcrLabel(acrScore)}
                         </p>
-                        {acrType && (
-                          <span style={{ background: "#FFFBEB", color: "#92400E", fontSize: "12px", padding: "3px 10px", borderRadius: "20px", border: "1px solid #FDE68A", fontWeight: "500" }}>
-                            Type {acrType}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
