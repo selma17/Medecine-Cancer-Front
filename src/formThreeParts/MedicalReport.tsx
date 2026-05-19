@@ -21,13 +21,17 @@ interface MedicalReportProps {
         densite: string;
         distanceCentre?: string;
         sein?: string;
+        localisationDetail?: string;
       }>;
       asymetrie?: boolean;
       typeAsymetrie?: string;
+      localisationAsymetrie?: string;
       distorsionArchitecturale?: boolean;
+      localisationDistorsion?: string;
       calcifications?: boolean;
       typesCalcifications?: string;
-      signesAssocies?: string[];
+      localisationCalcifications?: string;
+      signesAssocies?: Array<{ nom: string; localisation?: string }> | string[];
     };
     echographie?: {
       echostructureMammaire?: string;
@@ -43,38 +47,260 @@ interface MedicalReportProps {
         distanceCentre?: string;
         sein?: string;
       }>;
-      signesAssocies?: string[];
+      signesAssocies?: Array<{ nom: string; localisation?: string }> | string[];
+      casSpeciaux?: Array<{ nom: string; localisation?: string }>;
     };
     resultats?: {
       acrScore?: string;
       acrType?: string;
       conclusionIA?: string;
       conduiteATenir?: string;
+      // Nouveaux champs par sein
+      acrDroit?: string;
+      acrGauche?: string;
+      recommendationDroit?: string;
+      recommendationGauche?: string;
+      fullAiResponse?: string;
     };
   };
 }
 
+// ─── Helper : extraire ACR droit/gauche depuis la réponse IA ─────────────────
+const parsePerBreastResults = (fullResponse?: string, conduiteATenir?: string) => {
+  if (!fullResponse) {
+    return {
+      acrDroit: null,
+      acrGauche: null,
+      recoDroit: conduiteATenir || null,
+      recoGauche: conduiteATenir || null,
+    };
+  }
+
+  const droitMatch = fullResponse.match(/ACR\s+sein\s+droit\s*[:-]?\s*([0-9][ABC]?)/i);
+  const gaucheMatch = fullResponse.match(/ACR\s+sein\s+gauche\s*[:-]?\s*([0-9][ABC]?)/i);
+
+  // Recommandations : on cherche après chaque ACR
+  const droitRecoMatch = fullResponse.match(
+    /ACR\s+sein\s+droit[^.]*\.\s*(.+?)(?=ACR\s+sein\s+gauche|$)/is
+  );
+  const gaucheRecoMatch = fullResponse.match(/ACR\s+sein\s+gauche[^.]*\.\s*(.+?)(?=\n\n|$)/is);
+
+  return {
+    acrDroit: droitMatch ? droitMatch[1].trim() : null,
+    acrGauche: gaucheMatch ? gaucheMatch[1].trim() : null,
+    recoDroit: droitRecoMatch ? droitRecoMatch[1].trim().substring(0, 150) : conduiteATenir || null,
+    recoGauche: gaucheRecoMatch ? gaucheRecoMatch[1].trim().substring(0, 150) : conduiteATenir || null,
+  };
+};
+
+// ─── Mapping ACR → couleur ───────────────────────────────────────────────────
+const acrColor = (score: string | null) => {
+  if (!score) return "#64748b";
+  const n = parseInt(score[0]);
+  if (n <= 2) return "#16a34a";
+  if (n === 3) return "#ca8a04";
+  if (n === 4) return "#ea580c";
+  return "#dc2626";
+};
+
+// ─── Composant montre mammaire (clock diagram) ───────────────────────────────
+const BreastClockDiagram: React.FC<{
+  masses: Array<{ localisation?: string; sein?: string; mesure?: string }>;
+  sein: "droit" | "gauche";
+  label: string;
+}> = ({ masses, sein, label }) => {
+  const SIZE = 110;
+  const CX = SIZE / 2;
+  const CY = SIZE / 2;
+  const R = 44;
+
+  // Filtrer les masses de ce sein
+  const sesMasses = masses.filter((m) => {
+    if (!m.sein) return true;
+    return m.sein.toLowerCase().includes(sein === "droit" ? "droit" : "gauche");
+  });
+
+  // Convertir une localisation horaire en angle (12h = haut, sens horaire)
+  const heureToAngle = (loc: string): number | null => {
+    const match = loc.match(/(\d{1,2})\s*h/i);
+    if (!match) return null;
+    const h = parseInt(match[1]);
+    return ((h % 12) / 12) * 360 - 90; // -90 pour partir du haut
+  };
+
+  // Quadrants textuels
+  const quadrantAngle = (loc: string): number | null => {
+    const l = loc.toLowerCase();
+    if (l.includes("sup") && l.includes("ext")) return -45;
+    if (l.includes("sup") && l.includes("int")) return -135;
+    if (l.includes("inf") && l.includes("ext")) return 45;
+    if (l.includes("inf") && l.includes("int")) return 135;
+    if (l.includes("quadrant supérieur")) return -90;
+    if (l.includes("quadrant inférieur")) return 90;
+    if (l.includes("mamelonnaire") || l.includes("central")) return 0;
+    return null;
+  };
+
+  const getAngle = (loc: string): number | null => {
+    const h = heureToAngle(loc);
+    if (h !== null) return h;
+    return quadrantAngle(loc);
+  };
+
+  // Ticks des heures
+  const ticks = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  return (
+    <div style={{ textAlign: "center", display: "inline-block" }}>
+      <div style={{ fontSize: "9px", fontWeight: "bold", color: "#1B2B6B", marginBottom: "2px" }}>
+        {label}
+      </div>
+      <svg
+        width={SIZE}
+        height={SIZE}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Cercle extérieur */}
+        <circle cx={CX} cy={CY} r={R + 8} fill="white" stroke="#1B2B6B" strokeWidth="1.5" />
+        {/* Cercle mammaire */}
+        <circle cx={CX} cy={CY} r={R} fill="#EEF2F7" stroke="#1B2B6B" strokeWidth="1" />
+        {/* Mameleon */}
+        <circle cx={CX} cy={CY} r={5} fill="#1B2B6B" opacity="0.4" />
+
+        {/* Lignes quadrants */}
+        <line x1={CX} y1={CY - R} x2={CX} y2={CY + R} stroke="#ccc" strokeWidth="0.5" strokeDasharray="2,2" />
+        <line x1={CX - R} y1={CY} x2={CX + R} y2={CY} stroke="#ccc" strokeWidth="0.5" strokeDasharray="2,2" />
+
+        {/* Ticks horaires */}
+        {ticks.map((h) => {
+          const angleDeg = ((h % 12) / 12) * 360 - 90;
+          const angleRad = (angleDeg * Math.PI) / 180;
+          const x1 = CX + (R - 3) * Math.cos(angleRad);
+          const y1 = CY + (R - 3) * Math.sin(angleRad);
+          const x2 = CX + R * Math.cos(angleRad);
+          const y2 = CY + R * Math.sin(angleRad);
+          const xt = CX + (R + 5) * Math.cos(angleRad);
+          const yt = CY + (R + 5) * Math.sin(angleRad);
+          return (
+            <g key={h}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1B2B6B" strokeWidth="1" />
+              <text
+                x={xt}
+                y={yt}
+                fontSize="5"
+                fill="#1B2B6B"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {h}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Points des masses */}
+        {sesMasses.map((m, idx) => {
+          const loc = m.localisation || "";
+          const angle = getAngle(loc);
+          if (angle === null) {
+            // Masse au centre si localisation inconnue
+            return (
+              <circle
+                key={idx}
+                cx={CX + (idx * 6 - 3)}
+                cy={CY}
+                r={5}
+                fill="#dc2626"
+                stroke="white"
+                strokeWidth="1"
+                opacity="0.85"
+              />
+            );
+          }
+          const rad = (angle * Math.PI) / 180;
+          const dist = R * 0.6;
+          const px = CX + dist * Math.cos(rad);
+          const py = CY + dist * Math.sin(rad);
+          return (
+            <g key={idx}>
+              <circle cx={px} cy={py} r={5} fill="#dc2626" stroke="white" strokeWidth="1" opacity="0.9" />
+              <text x={px} y={py + 0.5} fontSize="5" fill="white" textAnchor="middle" dominantBaseline="middle">
+                {idx + 1}
+              </text>
+            </g>
+          );
+        })}
+
+        {sesMasses.length === 0 && (
+          <text x={CX} y={CY + 16} fontSize="5" fill="#64748b" textAnchor="middle">
+            Aucune masse
+          </text>
+        )}
+      </svg>
+      {sesMasses.length > 0 && (
+        <div style={{ fontSize: "7px", color: "#555", marginTop: "2px" }}>
+          {sesMasses.map((m, i) => (
+            <div key={i}>
+              <span style={{ color: "#dc2626", fontWeight: "bold" }}>●{i + 1}</span>{" "}
+              {m.localisation || "—"}
+              {m.mesure ? ` (${m.mesure} mm)` : ""}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Composant principal ─────────────────────────────────────────────────────
 const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData }) => {
   if (!isOpen) return null;
 
   const now = new Date();
-  const formatDate = () => now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const formatTime = () => now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const formatDate = () =>
+    now.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const formatTime = () =>
+    now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-  const userStr = localStorage.getItem('user');
+  const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
-  const doctorName = user?.nom && user?.prenom
-    ? `${user.prenom} ${user.nom}`
-    : (user?.nom || "Médecin Radiologue");
+  const doctorName =
+    user?.nom && user?.prenom ? `${user.prenom} ${user.nom}` : user?.nom || "Médecin Radiologue";
 
-  const extractConduite = (conduite?: string) => {
-    if (!conduite) return "—";
-    const actions = ["Surveillance", "Biopsie", "Ablation chirurgicale", "Traitement médical"];
-    for (const action of actions) {
-      if (conduite.includes(action)) return action;
+  // ── Résultats IA par sein ─────────────────────────────────────────────────
+  const fullResponse =
+    scanData.resultats?.fullAiResponse || scanData.resultats?.conclusionIA || "";
+  const parsed = parsePerBreastResults(fullResponse, scanData.resultats?.conduiteATenir);
+
+  const acrDroit = scanData.resultats?.acrDroit || parsed.acrDroit;
+  const acrGauche = scanData.resultats?.acrGauche || parsed.acrGauche;
+  const recoDroit = scanData.resultats?.recommendationDroit || parsed.recoDroit;
+  const recoGauche = scanData.resultats?.recommendationGauche || parsed.recoGauche;
+
+  // ACR global (le plus élevé des deux)
+  const acrGlobal = scanData.resultats?.acrScore || (acrDroit || acrGauche || "—");
+
+  // Toutes les masses (mammo + écho combinées pour la montre)
+  const allMasses: Array<{ localisation?: string; sein?: string; mesure?: string }> = [
+    ...(scanData.mammographie?.masses || []),
+    ...(scanData.echographie?.masses?.map((m) => ({ ...m })) || []),
+  ];
+
+  // Helper signes associés (supporte ancien format string[] et nouveau { nom, localisation }[])
+  const renderSignesAssocies = (
+    signes?: Array<{ nom: string; localisation?: string }> | string[]
+  ) => {
+    if (!signes || signes.length === 0) return null;
+    if (typeof signes[0] === "string") {
+      return (signes as string[]).join(", ");
     }
-    return conduite.split('\n')[0].substring(0, 50);
+    return (signes as Array<{ nom: string; localisation?: string }>)
+      .map((s) => (s.localisation ? `${s.nom} (${s.localisation})` : s.nom))
+      .join(", ");
   };
+
+  type SigneItem = { nom: string; localisation?: string } | string;
 
   return (
     <>
@@ -194,7 +420,30 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         .mr-masses-table td { border: 1px solid #ccc; padding: 3px 5px; }
         .mr-masses-table tr:nth-child(even) td { background: #FAFAFA; }
 
-        /* CONCLUSION */
+        /* CONCLUSION PAR SEIN */
+        .mr-conclusion-grid {
+          display: grid; grid-template-columns: 1fr 1fr;
+          gap: 8px; margin: 8px 0;
+        }
+        .mr-sein-card {
+          border: 2px solid #1B2B6B;
+          border-radius: 6px; overflow: hidden;
+        }
+        .mr-sein-card-header {
+          background: #1B2B6B; color: white;
+          padding: 4px 8px; font-size: 11px; font-weight: bold;
+          text-align: center; text-transform: uppercase;
+        }
+        .mr-sein-card-body { padding: 8px 10px; }
+        .mr-acr-badge-large {
+          display: inline-block;
+          padding: 3px 12px; border-radius: 4px;
+          font-size: 14px; font-weight: bold;
+          color: white; margin-bottom: 4px;
+        }
+        .mr-reco-text { font-size: 9.5px; color: #333; margin-top: 4px; }
+
+        /* CONCLUSION GLOBALE */
         .mr-conclusion {
           border: 2px solid #1B2B6B; padding: 8px 10px; margin: 8px 0;
         }
@@ -210,6 +459,16 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         }
         .mr-conduite { font-weight: bold; color: #1B2B6B; font-size: 11px; }
 
+        /* MONTRE MAMMAIRE */
+        .mr-clock-section {
+          border: 1px solid #ccc; margin-bottom: 8px;
+        }
+        .mr-clock-body {
+          display: flex; justify-content: space-around;
+          align-items: flex-start; padding: 10px;
+          gap: 20px;
+        }
+
         /* SIGNATURE */
         .mr-signature {
           display: flex; justify-content: space-between; align-items: flex-end;
@@ -224,7 +483,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         .mr-sig-right { text-align: right; font-size: 10px; }
         .mr-sig-line { width: 150px; border-bottom: 1px solid #000; margin: 20px 0 4px auto; }
 
-        /* ===== IMPRESSION : uniquement la feuille ===== */
+        /* ===== IMPRESSION ===== */
         @media print {
           body * { visibility: hidden; }
           .mr-page, .mr-page * { visibility: visible; }
@@ -240,14 +499,18 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       <div className="mr-overlay">
         <div className="mr-modal">
 
-          {/* Barre d'actions — cachée à l'impression */}
+          {/* Barre d'actions */}
           <div className="mr-actions">
             <span style={{ fontSize: "14px", fontWeight: "600", color: "#1B2B6B", fontFamily: "inherit" }}>
               Compte Rendu Médical
             </span>
             <div style={{ display: "flex", gap: "8px" }}>
               <button className="mr-print-btn" onClick={() => window.print()}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
                 Imprimer
               </button>
               <button className="mr-close-btn" onClick={onClose}>✕ Fermer</button>
@@ -255,10 +518,9 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           </div>
 
           <div className="mr-content">
-            {/* ===== FEUILLE DU RAPPORT (seule cette partie s'imprime) ===== */}
             <div className="mr-page">
 
-              {/* EN-TÊTE */}
+              {/* ── EN-TÊTE ── */}
               <div className="mr-header-top">
                 <div className="mr-hospital-info">
                   <p style={{ fontSize: "9px", color: "#555" }}>République Tunisienne</p>
@@ -278,7 +540,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 </div>
               </div>
 
-              {/* INFO PATIENT */}
+              {/* ── INFO PATIENT ── */}
               <div className="mr-patient-grid">
                 <div className="mr-patient-row">
                   <span className="mr-patient-label">Bénéficiaire :</span>
@@ -300,16 +562,15 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 </div>
               </div>
 
-              {/* RENSEIGNEMENTS CLINIQUES */}
+              {/* ── RENSEIGNEMENTS CLINIQUES ── */}
               <div className="mr-section-title">Renseignements Cliniques</div>
               <div className="mr-clinical">
                 {scanData.clientInfo?.renseignementsCliniques || "—"}
               </div>
 
-              {/* ===== MAMMOGRAPHIE FUSIONNÉE (anomalies + masses dans 1 bloc) ===== */}
+              {/* ── MAMMOGRAPHIE ── */}
               <div className="mr-section-title">Résultat — Mammographie</div>
               <div className="mr-fused-block">
-                {/* Densité + Anomalies */}
                 <div className="mr-fused-block-header">Données générales</div>
                 <div className="mr-fused-block-body">
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
@@ -317,23 +578,51 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                       Densité mammaire : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
                     </div>
                     <div className="mr-result-line">
-                      Asymétrie : <strong>{scanData.mammographie?.asymetrie ? `Oui — ${scanData.mammographie.typeAsymetrie || ""}` : "Non"}</strong>
+                      Asymétrie :{" "}
+                      <strong>
+                        {scanData.mammographie?.asymetrie
+                          ? `Oui — ${scanData.mammographie.typeAsymetrie || ""}${
+                              scanData.mammographie.localisationAsymetrie
+                                ? ` (${scanData.mammographie.localisationAsymetrie})`
+                                : ""
+                            }`
+                          : "Non"}
+                      </strong>
                     </div>
                     <div className="mr-result-line">
-                      Distorsion architecturale : <strong>{scanData.mammographie?.distorsionArchitecturale ? "Oui" : "Non"}</strong>
+                      Distorsion architecturale :{" "}
+                      <strong>
+                        {scanData.mammographie?.distorsionArchitecturale
+                          ? `Oui${
+                              scanData.mammographie.localisationDistorsion
+                                ? ` — ${scanData.mammographie.localisationDistorsion}`
+                                : ""
+                            }`
+                          : "Non"}
+                      </strong>
                     </div>
                     <div className="mr-result-line">
-                      Calcifications : <strong>{scanData.mammographie?.calcifications ? `Oui — ${scanData.mammographie.typesCalcifications || ""}` : "Non"}</strong>
+                      Calcifications :{" "}
+                      <strong>
+                        {scanData.mammographie?.calcifications
+                          ? `Oui — ${scanData.mammographie.typesCalcifications || ""}${
+                              scanData.mammographie.localisationCalcifications
+                                ? ` (${scanData.mammographie.localisationCalcifications})`
+                                : ""
+                            }`
+                          : "Non"}
+                      </strong>
                     </div>
                   </div>
-                  {scanData.mammographie?.signesAssocies && scanData.mammographie.signesAssocies.length > 0 && (
-                    <div className="mr-result-line" style={{ marginTop: "4px" }}>
-                      Signes associés : <strong>{scanData.mammographie.signesAssocies.join(", ")}</strong>
-                    </div>
-                  )}
+                  {scanData.mammographie?.signesAssocies &&
+                    (scanData.mammographie.signesAssocies as SigneItem[]).length > 0 && (
+                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
+                        Signes associés :{" "}
+                        <strong>{renderSignesAssocies(scanData.mammographie.signesAssocies as Array<{ nom: string; localisation?: string }> | string[])}</strong>
+                      </div>
+                    )}
                 </div>
 
-                {/* Masses mammographie dans le même bloc */}
                 {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
                   <>
                     <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
@@ -369,23 +658,35 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 )}
               </div>
 
-              {/* ===== ÉCHOGRAPHIE FUSIONNÉE (échostructure + masses dans 1 bloc) ===== */}
+              {/* ── ÉCHOGRAPHIE ── */}
               <div className="mr-section-title">Résultat — Échographie</div>
               <div className="mr-fused-block">
-                {/* Échostructure + signes */}
                 <div className="mr-fused-block-header">Données générales</div>
                 <div className="mr-fused-block-body">
                   <div className="mr-result-line">
-                    Échostructure mammaire : <strong>{scanData.echographie?.echostructureMammaire || "—"}</strong>
+                    Échostructure mammaire :{" "}
+                    <strong>{scanData.echographie?.echostructureMammaire || "—"}</strong>
                   </div>
-                  {scanData.echographie?.signesAssocies && scanData.echographie.signesAssocies.length > 0 && (
-                    <div className="mr-result-line" style={{ marginTop: "4px" }}>
-                      Signes associés : <strong>{scanData.echographie.signesAssocies.join(", ")}</strong>
-                    </div>
-                  )}
+                  {scanData.echographie?.signesAssocies &&
+                    (scanData.echographie.signesAssocies as SigneItem[]).length > 0 && (
+                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
+                        Signes associés :{" "}
+                        <strong>{renderSignesAssocies(scanData.echographie.signesAssocies as Array<{ nom: string; localisation?: string }> | string[])}</strong>
+                      </div>
+                    )}
+                  {scanData.echographie?.casSpeciaux &&
+                    scanData.echographie.casSpeciaux.length > 0 && (
+                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
+                        Cas spéciaux :{" "}
+                        <strong>
+                          {scanData.echographie.casSpeciaux
+                            .map((c) => (c.localisation ? `${c.nom} (${c.localisation})` : c.nom))
+                            .join(", ")}
+                        </strong>
+                      </div>
+                    )}
                 </div>
 
-                {/* Masses échographie dans le même bloc */}
                 {scanData.echographie?.masses && scanData.echographie.masses.length > 0 && (
                   <>
                     <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
@@ -397,6 +698,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                           <tr>
                             <th>#</th>
                             <th>Localisation</th>
+                            <th>Sein</th>
                             <th>Mesure</th>
                             <th>Forme</th>
                             <th>Contours</th>
@@ -410,6 +712,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                             <tr key={i}>
                               <td>{i + 1}</td>
                               <td>{masse.localisation || "—"}</td>
+                              <td>{masse.sein || "—"}</td>
                               <td>{masse.mesure ? `${masse.mesure} mm` : "—"}</td>
                               <td>{masse.forme || "—"}</td>
                               <td>{masse.contours || "—"}</td>
@@ -425,24 +728,145 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                 )}
               </div>
 
-              {/* CONCLUSION */}
-              <div className="mr-conclusion">
-                <div className="mr-conclusion-title">Conclusion</div>
-                <p style={{ fontSize: "11px", margin: "4px 0" }}>
-                  <span className="mr-acr-badge">
-                    ACR {scanData.resultats?.acrScore || "—"}
-                  </span>
-                  <span className="mr-conduite">
-                    {extractConduite(scanData.resultats?.conduiteATenir)}
-                  </span>
-                </p>
-              </div>
+              {/* ── CARTOGRAPHIE MAMMAIRE (Montre) ── */}
+              {allMasses.length > 0 && (
+                <>
+                  <div className="mr-section-title">Cartographie des lésions — Aide chirurgicale</div>
+                  <div className="mr-clock-section">
+                    <div
+                      className="mr-fused-block-header"
+                      style={{ fontSize: "9px", fontStyle: "italic", fontWeight: "normal" }}
+                    >
+                      Localisation horaire des masses (vue de face, patiente debout).
+                      Sein droit : sens horaire patient. Sein gauche : sens horaire miroir.
+                    </div>
+                    <div className="mr-clock-body">
+                      <BreastClockDiagram
+                        masses={allMasses}
+                        sein="droit"
+                        label="SEIN DROIT"
+                      />
+                      <div
+                        style={{
+                          borderLeft: "1px dashed #ccc",
+                          alignSelf: "stretch",
+                          margin: "0 10px",
+                        }}
+                      />
+                      <BreastClockDiagram
+                        masses={allMasses}
+                        sein="gauche"
+                        label="SEIN GAUCHE"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* SIGNATURE */}
+              {/* ── CONCLUSION PAR SEIN ── */}
+              <div className="mr-section-title">Conclusion — Classification BI-RADS ACR 2013</div>
+
+              {(acrDroit || acrGauche) ? (
+                <div className="mr-conclusion-grid">
+                  {/* Sein droit */}
+                  <div className="mr-sein-card">
+                    <div className="mr-sein-card-header">Sein Droit</div>
+                    <div className="mr-sein-card-body">
+                      {acrDroit ? (
+                        <>
+                          <div>
+                            <span
+                              className="mr-acr-badge-large"
+                              style={{ background: acrColor(acrDroit) }}
+                            >
+                              ACR {acrDroit}
+                            </span>
+                          </div>
+                          {recoDroit && (
+                            <div className="mr-reco-text">
+                              <strong>Recommandation :</strong> {recoDroit}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ fontSize: "10px", color: "#64748b", fontStyle: "italic" }}>
+                          Non évalué / Normal
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sein gauche */}
+                  <div className="mr-sein-card">
+                    <div className="mr-sein-card-header">Sein Gauche</div>
+                    <div className="mr-sein-card-body">
+                      {acrGauche ? (
+                        <>
+                          <div>
+                            <span
+                              className="mr-acr-badge-large"
+                              style={{ background: acrColor(acrGauche) }}
+                            >
+                              ACR {acrGauche}
+                            </span>
+                          </div>
+                          {recoGauche && (
+                            <div className="mr-reco-text">
+                              <strong>Recommandation :</strong> {recoGauche}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ fontSize: "10px", color: "#64748b", fontStyle: "italic" }}>
+                          Non évalué / Normal
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Fallback : affichage global si l'IA n'a pas renvoyé par sein */
+                <div className="mr-conclusion">
+                  <p style={{ fontSize: "11px", margin: "4px 0" }}>
+                    <span className="mr-acr-badge">ACR {acrGlobal}</span>
+                    <span className="mr-conduite">{scanData.resultats?.conduiteATenir || "—"}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Résumé textuel de l'IA (optionnel, si texte disponible) */}
+              {fullResponse && fullResponse.length > 20 && (
+                <div
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "4px",
+                    padding: "8px 10px",
+                    marginBottom: "8px",
+                    fontSize: "9.5px",
+                    color: "#333",
+                    lineHeight: "1.6",
+                    whiteSpace: "pre-wrap",
+                    background: "#FAFBFE",
+                  }}
+                >
+                  <div
+                    style={{ fontWeight: "bold", color: "#1B2B6B", marginBottom: "4px", fontSize: "10px" }}
+                  >
+                    Analyse IA — Détail
+                  </div>
+                  {fullResponse}
+                </div>
+              )}
+
+              {/* ── SIGNATURE ── */}
               <div className="mr-signature">
                 <div className="mr-sig-left">
-                  <p style={{ margin: "1px 0" }}><strong>Effectué le :</strong> {formatDate()} à {formatTime()}</p>
-                  <p style={{ margin: "1px 0" }}><strong>Validé par :</strong> {doctorName}</p>
+                  <p style={{ margin: "1px 0" }}>
+                    <strong>Effectué le :</strong> {formatDate()} à {formatTime()}
+                  </p>
+                  <p style={{ margin: "1px 0" }}>
+                    <strong>Validé par :</strong> {doctorName}
+                  </p>
                 </div>
                 <div className="mr-sig-stamp">
                   <span>CACHET</span>
