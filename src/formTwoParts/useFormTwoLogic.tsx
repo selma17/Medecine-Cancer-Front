@@ -36,21 +36,17 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
     setNombreMasse(value === "" ? "" : Math.max(0, Number(value)));
   };
 
-  const handleLocalisationChange = (index: number, value: string) => {
+  const handleLocalisationChange = (index: number, value: string) =>
     setLocalisations((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
-  };
 
-  const handleDistanceCentreChange = (index: number, value: string) => {
+  const handleDistanceCentreChange = (index: number, value: string) =>
     setDistancesCentre((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
-  };
 
-  const handleSeinChange = (index: number, value: "gauche" | "droite") => {
+  const handleSeinChange = (index: number, value: "gauche" | "droite") =>
     setSeins((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
-  };
 
-  const handleMesureChange = (index: number, value: string) => {
+  const handleMesureChange = (index: number, value: string) =>
     setMesures((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
-  };
 
   const handleMassesDataChange = (
     index: number,
@@ -66,15 +62,13 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   const handleSignesAssociesChange = (selected: string[]) => setSignesAssocies(selected);
 
-  const handleSigneLocalisationChange = (sign: string, value: string) => {
+  const handleSigneLocalisationChange = (sign: string, value: string) =>
     setSignesLocalisations((prev) => ({ ...prev, [sign]: value }));
-  };
 
   const handleCasSpeciauxChange = (selected: string[]) => setCasSpeciaux(selected);
 
-  const handleCasSpeciauxLocalisationChange = (name: string, localisation: string) => {
+  const handleCasSpeciauxLocalisationChange = (name: string, localisation: string) =>
     setCasSpeciauxLocalisations((prev) => ({ ...prev, [name]: localisation }));
-  };
 
   const handleEchostructureChange = (value: string) => setEchostructureMammaire(value);
 
@@ -111,42 +105,53 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
       return;
     }
 
-    // Construire les signes associés avec localisations
-    const signesAvecLocalisations = signesAssocies.map((sign) =>
-      signesLocalisations[sign] ? `${sign} (${signesLocalisations[sign]})` : sign
-    );
-
     const scanData = {
-      densiteMammaire: formOneData.densiteMammaire || null,
-      asymetrie: formOneData.asymetrie !== null ? formOneData.asymetrie : null,
-      typeAsymetrie: formOneData.typeAsymetrie || null,
-      distorsionArchitecturale: formOneData.distorsionArchitecturale !== null ? formOneData.distorsionArchitecturale : null,
+      // ── Mammographie ──────────────────────────────────────────────────────
+      densiteMammaire:              formOneData.densiteMammaire || null,
+      asymetrie:                    formOneData.asymetrie ?? null,
+      typeAsymetrie:                formOneData.typeAsymetrie || null,
+      localisationAsymetrie:        formOneData.localisationAsymetrie || null,
+      distorsionArchitecturale:     formOneData.distorsionArchitecturale ?? null,
       optionDistorsionArchitecturale: formOneData.optionDistorsionArchitecturale || null,
-      calcifications: formOneData.calcifications !== null ? formOneData.calcifications : null,
-      typesCalcifications: formOneData.typesCalcifications || null,
-      calcificationsBenignes: formOneData.calcificationsBenignes || null,
-      calcificationsSuspectes: formOneData.calcificationsSuspectes || null,
+      localisationDistorsion:       formOneData.localisationDistorsion || null,
+      calcifications:               formOneData.calcifications ?? null,
+      typesCalcifications:          formOneData.typesCalcifications || null,
+      localisationCalcifications:   formOneData.localisationCalcifications || null,
+      calcificationsBenignes:       formOneData.calcificationsBenignes || null,
+      calcificationsSuspectes:      formOneData.calcificationsSuspectes || null,
       distributionMicrocalcifications: formOneData.distributionMicrocalcifications || null,
-      signesAssociesMammographie: formOneData.signesAssociesMammographie || null,
+
+      // Signes associés mammo — listes parallèles
+      signesAssociesMammographie:       formOneData.signesAssociesMammographie || null,
+      localisationsSignesMammographie:  formOneData.localisationsSignesMammographie || null,
+
+      // ── Échographie ───────────────────────────────────────────────────────
       echostructureMammaire: echostructureMammaire || null,
-      signesAssociesEchostructure: signesAvecLocalisations.length ? signesAvecLocalisations : null,
+
+      // Signes associés écho — listes parallèles séparées
+      signesAssociesEchostructure:      signesAssocies.length > 0 ? signesAssocies : null,
+      localisationsSignesEchostructure: signesAssocies.length > 0
+        ? signesAssocies.map((s) => signesLocalisations[s] || "") : null,
+
+      // Cas spéciaux
       casSpeciaux: casSpeciaux.map((name) => ({
         nom: name,
         localisation: casSpeciauxLocalisations[name] || "",
       })),
+
       conclusionRadiologue: null,
-      conduiteRadiologue: null,
-      conclusionIA: null,
-      conduiteATenir: null,
+      conduiteRadiologue:   null,
+      conclusionIA:         null,
+      conduiteATenir:       null,
       client: { id: clientId || null },
-      massesMammographie: formOneData.massesMammographie?.length ? formOneData.massesMammographie : null,
+
+      massesMammographie:  formOneData.massesMammographie?.length ? formOneData.massesMammographie : null,
       massesEchostructure: massesEchographie,
     };
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/mammary-scan/add`, scanData);
-      const createdScan = response.data;
-      const scanId = createdScan.id;
+      const scanId = response.data.id;
       toast.success("Scan enregistré avec succès ✅");
       await axios.get(`${API_BASE_URL}/api/mammary-scan/acr/${scanId}`);
       toast.success("Analyse IA lancée ✅");

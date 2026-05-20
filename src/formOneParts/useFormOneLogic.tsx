@@ -145,31 +145,37 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
       densite: densites[index] || "",
     }));
 
-    // Construire les signes associés avec localisations
-    const signesAvecLocalisations = signsAssociated.map((sign) =>
-      signsLocalisations[sign] ? `${sign} (${signsLocalisations[sign]})` : sign
-    );
-
     setFormOneData({
       densiteMammaire: selected.length > 0 ? selected.join(", ") : null,
       massesMammographie: massesMammographie.length > 0 ? massesMammographie : null,
+
+      // Asymétrie — champs séparés
       asymetrie: asymmetry === "oui" ? true : null,
-      typeAsymetrie: asymmetry === "oui"
-        ? `${asymmetryDetails.join(", ")}${asymmetryLocalisation ? ` — localisation: ${asymmetryLocalisation}` : ""}`
-        : null,
+      typeAsymetrie: asymmetry === "oui" && asymmetryDetails.length > 0
+        ? asymmetryDetails.join(", ") : null,
+      localisationAsymetrie: asymmetry === "oui" && asymmetryLocalisation
+        ? asymmetryLocalisation : null,
+
+      // Distorsion — champs séparés
       distorsionArchitecturale: distortion === "oui" ? true : null,
-      optionDistorsionArchitecturale: distortion === "oui"
-        ? `${distortionOption}${distortionLocalisation ? ` — localisation: ${distortionLocalisation}` : ""}`
-        : null,
+      optionDistorsionArchitecturale: distortion === "oui" && distortionOption
+        ? distortionOption : null,
+      localisationDistorsion: distortion === "oui" && distortionLocalisation
+        ? distortionLocalisation : null,
+
+      // Calcifications — champs séparés
       calcifications: calcifications === "oui" ? true : null,
-      typesCalcifications: typeCalcification
-        ? `${typeCalcification}${calcificationLocalisation ? ` — localisation: ${calcificationLocalisation}` : ""}`
-        : null,
-      signesAssociesMammographie: signesAvecLocalisations.length > 0 ? signesAvecLocalisations : null,
+      typesCalcifications: typeCalcification || null,
+      localisationCalcifications: calcificationLocalisation || null,
       calcificationsBenignes: benigneSelected.length > 0 ? benigneSelected.join(", ") : null,
       calcificationsSuspectes: suspecteSelected.length > 0 ? suspecteSelected.join(", ") : null,
       distributionMicrocalcifications: distributionMicrocalcifications.length > 0
         ? distributionMicrocalcifications.join(", ") : null,
+
+      // Signes associés — listes parallèles séparées
+      signesAssociesMammographie: signsAssociated.length > 0 ? signsAssociated : null,
+      localisationsSignesMammographie: signsAssociated.length > 0
+        ? signsAssociated.map((s) => signsLocalisations[s] || "") : null,
     });
 
     navigate("/formtwo");
