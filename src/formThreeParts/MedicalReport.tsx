@@ -61,6 +61,7 @@ interface MedicalReportProps {
       recommendationDroit?: string;
       recommendationGauche?: string;
       fullAiResponse?: string;
+      seinsAvecMasses?: string[];
     };
   };
 }
