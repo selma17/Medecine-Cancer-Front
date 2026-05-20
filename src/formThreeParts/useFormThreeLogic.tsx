@@ -31,7 +31,29 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
     { title: "Conclusion",   status: "in-progress" as const },
   ];
 
-  const transformScanDataForReport = (scan: any, clientDetails?: any) => {
+  // ── Détecte quels seins ont des masses ──────────────────────────────────
+  const detectSeinsAvecMasses = (scan: any): string[] => {
+    const masses = [
+      ...(scan.massesMammographie || []),
+      ...(scan.massesEchostructure || []),
+    ];
+    const seins = new Set<string>();
+    masses.forEach((m: any) => {
+      if (m.sein) {
+        const s = m.sein.toLowerCase();
+        if (s.includes("droit")) seins.add("droit");
+        if (s.includes("gauche")) seins.add("gauche");
+      }
+    });
+    // Si aucun sein précisé sur les masses, on considère les deux
+    if (seins.size === 0 && masses.length > 0) {
+      seins.add("droit");
+      seins.add("gauche");
+    }
+    return Array.from(seins);
+  };
+
+    const transformScanDataForReport = (scan: any, clientDetails?: any) => {
     return {
       scanId: scan.id?.toString(),
       clientInfo: scan.client ? {
@@ -88,6 +110,8 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
         recommendationDroit:   scan.recommandationDroit  || "",
         recommendationGauche:  scan.recommandationGauche || "",
         fullAiResponse:        scan.fullAiResponse       || "",
+        // Seins qui ont effectivement des masses
+        seinsAvecMasses:       detectSeinsAvecMasses(scan),
       },
     };
   };

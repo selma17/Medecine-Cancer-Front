@@ -281,6 +281,28 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
   // ACR global (le plus élevé des deux)
   const acrGlobal = scanData.resultats?.acrScore || (acrDroit || acrGauche || "—");
 
+  // Seins qui ont effectivement des masses
+  const seinsAvecMasses: string[] = scanData.resultats?.seinsAvecMasses || (() => {
+    const masses = [
+      ...(scanData.mammographie?.masses || []),
+      ...(scanData.echographie?.masses || []),
+    ];
+    const s = new Set<string>();
+    masses.forEach((m: { sein?: string }) => {
+      if (m.sein?.toLowerCase().includes("droit")) s.add("droit");
+      if (m.sein?.toLowerCase().includes("gauche")) s.add("gauche");
+    });
+    if (s.size === 0 && masses.length > 0) { s.add("droit"); s.add("gauche"); }
+    // Fallback sur les scores IA
+    if (s.size === 0) {
+      if (acrDroit) s.add("droit");
+      if (acrGauche) s.add("gauche");
+    }
+    return Array.from(s);
+  })();
+
+  const seinUnique = seinsAvecMasses.length === 1;
+
   // Toutes les masses (mammo + écho combinées pour la montre)
   const allMasses: Array<{ localisation?: string; sein?: string; mesure?: string }> = [
     ...(scanData.mammographie?.masses || []),
@@ -424,6 +446,10 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         .mr-conclusion-grid {
           display: grid; grid-template-columns: 1fr 1fr;
           gap: 8px; margin: 8px 0;
+        }
+        .mr-conclusion-single {
+          display: grid; grid-template-columns: minmax(0, 320px);
+          gap: 8px; margin: 8px 0; justify-content: center;
         }
         .mr-sein-card {
           border: 2px solid #1B2B6B;
@@ -767,62 +793,44 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
               <div className="mr-section-title">Conclusion — Classification BI-RADS ACR 2013</div>
 
               {(acrDroit || acrGauche) ? (
-                <div className="mr-conclusion-grid">
-                  {/* Sein droit */}
-                  <div className="mr-sein-card">
-                    <div className="mr-sein-card-header">Sein Droit</div>
-                    <div className="mr-sein-card-body">
-                      {acrDroit ? (
-                        <>
-                          <div>
-                            <span
-                              className="mr-acr-badge-large"
-                              style={{ background: acrColor(acrDroit) }}
-                            >
-                              ACR {acrDroit}
-                            </span>
-                          </div>
-                          {recoDroit && (
-                            <div className="mr-reco-text">
-                              <strong>Recommandation :</strong> {recoDroit}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div style={{ fontSize: "10px", color: "#64748b", fontStyle: "italic" }}>
-                          Non évalué / Normal
+                <div className={seinUnique ? "mr-conclusion-single" : "mr-conclusion-grid"}>
+                  {/* Sein droit — seulement si anomalie */}
+                  {seinsAvecMasses.includes("droit") && acrDroit && (
+                    <div className="mr-sein-card">
+                      <div className="mr-sein-card-header">Sein Droit</div>
+                      <div className="mr-sein-card-body">
+                        <div>
+                          <span className="mr-acr-badge-large" style={{ background: acrColor(acrDroit) }}>
+                            ACR {acrDroit}
+                          </span>
                         </div>
-                      )}
+                        {recoDroit && (
+                          <div className="mr-reco-text">
+                            <strong>Recommandation :</strong> {recoDroit}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Sein gauche */}
-                  <div className="mr-sein-card">
-                    <div className="mr-sein-card-header">Sein Gauche</div>
-                    <div className="mr-sein-card-body">
-                      {acrGauche ? (
-                        <>
-                          <div>
-                            <span
-                              className="mr-acr-badge-large"
-                              style={{ background: acrColor(acrGauche) }}
-                            >
-                              ACR {acrGauche}
-                            </span>
-                          </div>
-                          {recoGauche && (
-                            <div className="mr-reco-text">
-                              <strong>Recommandation :</strong> {recoGauche}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div style={{ fontSize: "10px", color: "#64748b", fontStyle: "italic" }}>
-                          Non évalué / Normal
+                  {/* Sein gauche — seulement si anomalie */}
+                  {seinsAvecMasses.includes("gauche") && acrGauche && (
+                    <div className="mr-sein-card">
+                      <div className="mr-sein-card-header">Sein Gauche</div>
+                      <div className="mr-sein-card-body">
+                        <div>
+                          <span className="mr-acr-badge-large" style={{ background: acrColor(acrGauche) }}>
+                            ACR {acrGauche}
+                          </span>
                         </div>
-                      )}
+                        {recoGauche && (
+                          <div className="mr-reco-text">
+                            <strong>Recommandation :</strong> {recoGauche}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 /* Fallback : affichage global si l'IA n'a pas renvoyé par sein */

@@ -49,6 +49,56 @@ const FormThree: React.FC = () => {
   // ── Détermine si on a des résultats par sein ─────────────────────────────
   const hasPerBreast = !!(acrDroit || acrGauche);
 
+  // Seins qui ont effectivement des masses (depuis scanData)
+  const seinsActifs: string[] = scanData?.resultats?.seinsAvecMasses || (
+    acrDroit && acrGauche ? ["droit", "gauche"] :
+    acrDroit ? ["droit"] :
+    acrGauche ? ["gauche"] : ["droit", "gauche"]
+  );
+
+
+  // ── Carte sein : normal vs pathologique ─────────────────────────────────
+  const isNormal = (score: string) => score === "1" || score === "2";
+
+  const SeinCard: React.FC<{ label: string; acr: string; reco: string }> = ({ label, acr, reco }) => {
+    const normal = isNormal(acr);
+    return (
+      <div className="sein-card">
+        <div className="sein-card-header" style={{ background: normal ? "#16a34a" : getAcrColor(acr) }}>
+          {label}
+        </div>
+        <div className="sein-card-body" style={{ background: normal ? "#f0fdf4" : undefined }}>
+          {normal ? (
+            <>
+              <div className="sein-acr-circle" style={{ background: "#dcfce7", border: "1.5px dashed #86efac" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <p style={{ fontSize: "12px", fontWeight: "600", color: "#16a34a", textAlign: "center", margin: "0 0 4px" }}>Normal</p>
+              <p style={{ fontSize: "11px", color: "#64748b", textAlign: "center", margin: 0, fontStyle: "italic" }}>ACR {acr} — aucune anomalie</p>
+            </>
+          ) : (
+            <>
+              <div className="sein-acr-circle" style={{ background: getAcrColor(acr) }}>
+                <span style={{ fontSize: "22px", fontWeight: "700", color: "white" }}>{acr}</span>
+              </div>
+              <p style={{ fontSize: "12px", fontWeight: "600", color: getAcrColor(acr), textAlign: "center", margin: "0 0 6px" }}>
+                {getAcrLabel(acr)}
+              </p>
+              {reco && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", color: getAcrColor(acr) }}>
+                  {getConduiteIcon(reco)}
+                  <span style={{ fontSize: "12px", fontWeight: "600" }}>{reco}</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <style>{`
@@ -108,6 +158,10 @@ const FormThree: React.FC = () => {
         .sein-grid {
           display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
           margin-bottom: 1.5rem;
+        }
+        .sein-grid-single {
+          display: grid; grid-template-columns: minmax(0, 360px); gap: 12px;
+          margin-bottom: 1.5rem; justify-content: center;
         }
         .sein-card {
           border-radius: 12px; border: 1px solid #e2e8f0;
@@ -193,67 +247,16 @@ const FormThree: React.FC = () => {
                   {hasPerBreast ? (
                     <>
                       <p style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
-                        Résultats par sein
+                        {seinsActifs.length === 1 ? "Résultat — Sein concerné" : "Résultats par sein"}
                       </p>
 
-                      <div className="sein-grid">
-                        {/* Sein droit */}
-                        <div className="sein-card">
-                          <div className="sein-card-header" style={{ background: acrDroit ? getAcrColor(acrDroit) : "#94a3b8" }}>
-                            Sein Droit
-                          </div>
-                          <div className="sein-card-body">
-                            {acrDroit ? (
-                              <>
-                                <div className="sein-acr-circle" style={{ background: getAcrColor(acrDroit) }}>
-                                  <span style={{ fontSize: "22px", fontWeight: "700", color: "white" }}>{acrDroit}</span>
-                                </div>
-                                <p style={{ fontSize: "12px", fontWeight: "700", color: getAcrColor(acrDroit), textAlign: "center", margin: 0 }}>
-                                  {getAcrLabel(acrDroit)}
-                                </p>
-                                {recommandationDroit && (
-                                  <div className="sein-reco">
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "8px", color: getAcrColor(acrDroit) }}>
-                                      {getConduiteIcon(recommandationDroit)}
-                                      <span style={{ fontSize: "12px", fontWeight: "600" }}>{recommandationDroit}</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <p style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", fontStyle: "italic", margin: 0 }}>Normal / Non évalué</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Sein gauche */}
-                        <div className="sein-card">
-                          <div className="sein-card-header" style={{ background: acrGauche ? getAcrColor(acrGauche) : "#94a3b8" }}>
-                            Sein Gauche
-                          </div>
-                          <div className="sein-card-body">
-                            {acrGauche ? (
-                              <>
-                                <div className="sein-acr-circle" style={{ background: getAcrColor(acrGauche) }}>
-                                  <span style={{ fontSize: "22px", fontWeight: "700", color: "white" }}>{acrGauche}</span>
-                                </div>
-                                <p style={{ fontSize: "12px", fontWeight: "700", color: getAcrColor(acrGauche), textAlign: "center", margin: 0 }}>
-                                  {getAcrLabel(acrGauche)}
-                                </p>
-                                {recommandationGauche && (
-                                  <div className="sein-reco">
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginTop: "8px", color: getAcrColor(acrGauche) }}>
-                                      {getConduiteIcon(recommandationGauche)}
-                                      <span style={{ fontSize: "12px", fontWeight: "600" }}>{recommandationGauche}</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <p style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", fontStyle: "italic", margin: 0 }}>Normal / Non évalué</p>
-                            )}
-                          </div>
-                        </div>
+                      <div className={seinsActifs.length === 1 ? "sein-grid-single" : "sein-grid"}>
+                        {seinsActifs.includes("droit") && (
+                          <SeinCard label="Sein Droit" acr={acrDroit} reco={recommandationDroit} />
+                        )}
+                        {seinsActifs.includes("gauche") && (
+                          <SeinCard label="Sein Gauche" acr={acrGauche} reco={recommandationGauche} />
+                        )}
                       </div>
 
                       {/* Score global */}
