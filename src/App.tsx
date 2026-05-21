@@ -11,7 +11,6 @@ import FormOne from "./FormOne";
 import FormTwo from "./FormTwo";
 import StepFour from "./FormFour";
 import FormThree from "./FormThree";
-import Finalisation from "./Finalisation";
 
 function App() {
   return (
@@ -31,9 +30,6 @@ function App() {
         <Route path="/formthree" element={<FormThree />} />
         <Route path="/formfour" element={<StepFour />} />
         <Route path="/add-patient" element={<MainApp />} />
-        <Route path="/finalisation" element={
-          <ProtectedRoute><Finalisation /></ProtectedRoute>
-        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
