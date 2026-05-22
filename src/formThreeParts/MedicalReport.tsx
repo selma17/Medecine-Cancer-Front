@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import emailjs from "@emailjs/browser";
+import jsPDF from "jspdf";
 
 interface MedicalReportProps {
   isOpen: boolean;
@@ -11,6 +13,8 @@ interface MedicalReportProps {
       renseignementsCliniques?: string;
       dateNaissance?: string;
       telephone?: string;
+      emailPatient?: string;
+      emailMedecin?: string;
     };
     mammographie?: {
       densiteMammaire?: string;
@@ -256,6 +260,84 @@ const BreastClockDiagram: React.FC<{
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData }) => {
+  const [sending, setSending] = useState(false);
+
+  const handleSendEmail = async () => {
+    const emailPatient = scanData.clientInfo?.emailPatient;
+    const emailMedecin = scanData.clientInfo?.emailMedecin;
+
+    if (!emailPatient && !emailMedecin) {
+      alert("Aucun email renseigné pour ce patient ou le médecin traitant.");
+      return;
+    }
+
+    setSending(true);
+    try {
+      // Generate PDF
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const patientName = `${scanData.clientInfo?.nom || ""} ${scanData.clientInfo?.prenom || ""}`.trim();
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      const drName = user?.nom && user?.prenom ? `${user.prenom} ${user.nom}` : user?.nom || "Médecin Radiologue";
+      const acrD = scanData.resultats?.acrDroit || "";
+      const acrG = scanData.resultats?.acrGauche || "";
+      const recoD = scanData.resultats?.recommendationDroit || "";
+      const recoG = scanData.resultats?.recommendationGauche || "";
+      const acrGlobal = scanData.resultats?.acrScore || "";
+      const conduite = scanData.resultats?.conduiteATenir || "";
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("COMPTE RENDU D\'EXAMEN RADIOLOGIQUE", 105, 20, { align: "center" });
+      doc.text("ECHO MAMMOGRAPHIE", 105, 28, { align: "center" });
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Patiente : ${patientName}`, 20, 40);
+      doc.text(`Date de naissance : ${scanData.clientInfo?.dateNaissance || "—"}`, 20, 47);
+      doc.text(`Renseignements : ${scanData.clientInfo?.renseignementsCliniques || "—"}`, 20, 54);
+      doc.setFont("helvetica", "bold");
+      doc.text("CONCLUSION — CLASSIFICATION BI-RADS ACR 2013", 20, 68);
+      doc.setFont("helvetica", "normal");
+      if (acrD) doc.text(`Sein droit : ACR ${acrD} — ${recoD}`, 20, 76);
+      if (acrG) doc.text(`Sein gauche : ACR ${acrG} — ${recoG}`, 20, 83);
+      if (!acrD && !acrG) {
+        doc.text(`Score global : ACR ${acrGlobal} — ${conduite}`, 20, 76);
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(`Dr. ${drName}`, 20, 100);
+      doc.setFont("helvetica", "normal");
+      doc.text("Médecin Radiologue — Hôpital Régional Ksar Hellal", 20, 107);
+
+      const pdfBase64 = doc.output("datauristring");
+
+      const templateParams = {
+        doctor_name: drName,
+        patient_name: patientName,
+        date: new Date().toLocaleDateString("fr-FR"),
+        acr_droit: acrD ? `ACR ${acrD} — ${recoD}` : "—",
+        acr_gauche: acrG ? `ACR ${acrG} — ${recoG}` : "—",
+        acr_global: acrGlobal ? `ACR ${acrGlobal} — ${conduite}` : "—",
+      };
+
+      const recipients = [emailPatient, emailMedecin].filter(Boolean) as string[];
+      for (const email of recipients) {
+        await emailjs.send(
+          "Breast-AI-Report",
+          "template_gpta0ho",
+          { ...templateParams, to_email: email },
+          "OzRMXEMMSi4xOz4LN"
+        );
+      }
+
+      alert(`Rapport envoyé avec succès à ${recipients.join(" et ")}`);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de l\'envoi du rapport.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const now = new Date();
@@ -539,6 +621,18 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
                 Imprimer
+              </button>
+              <button
+                className="mr-send-btn"
+                onClick={handleSendEmail}
+                disabled={sending}
+                style={{ padding: "8px 16px", background: sending ? "#94a3b8" : "#16a34a", color: "white", border: "none", borderRadius: "6px", cursor: sending ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: "600", fontFamily: "inherit", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                {sending ? (
+                  <><div style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid white", borderRadius: "50%", animation: "spin 1s linear infinite" }}/> Envoi...</>
+                ) : (
+                  <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer le rapport</>
+                )}
               </button>
               <button className="mr-close-btn" onClick={onClose}>✕ Fermer</button>
             </div>

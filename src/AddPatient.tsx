@@ -11,6 +11,8 @@ const AddPatientForm: React.FC = () => {
   const [dateNaissance, setDateNaissance] = useState("");
   const [telephone, setTelephone] = useState("");
   const [renseignements, setRenseignements] = useState("");
+  const [emailPatient, setEmailPatient] = useState("");
+  const [emailMedecin, setEmailMedecin] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setClientId } = useScanStore();
@@ -21,7 +23,7 @@ const AddPatientForm: React.FC = () => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/clients/enregistrer`,
-        { nom, prenom, dateNaissance, telephone, renseignementsCliniques: renseignements }
+        { nom, prenom, dateNaissance, telephone, renseignementsCliniques: renseignements, emailPatient, emailMedecin }
       );
       setClientId(response.data.id);
       toast.success("Patient enregistré avec succès !");
@@ -107,6 +109,25 @@ const AddPatientForm: React.FC = () => {
                 <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Téléphone</label>
                 <input type="tel" placeholder="ex: 22 690 725" value={telephone}
                   onChange={(e) => setTelephone(e.target.value)} style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Email patient</label>
+                <input type="email" placeholder="ex: patient@email.com" value={emailPatient}
+                  onChange={(e) => setEmailPatient(e.target.value)} style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "13px", color: "#64748b", display: "block", marginBottom: "6px", fontWeight: "500" }}>Email médecin traitant</label>
+                <input type="email" placeholder="ex: medecin@email.com" value={emailMedecin}
+                  onChange={(e) => setEmailMedecin(e.target.value)} style={inputStyle}
                   onFocus={(e) => e.target.style.borderColor = "#1B2B6B"}
                   onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                 />

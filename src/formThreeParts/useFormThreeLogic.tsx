@@ -35,6 +35,8 @@ const transformScanDataForReport = (scan: any, clientDetails?: any) => {
         telephone:     clientDetails?.telephone     || scan.client.telephone     || null,
         renseignementsCliniques:
           clientDetails?.renseignementsCliniques || scan.client.renseignementsCliniques,
+        emailPatient:  clientDetails?.emailPatient  || scan.client.emailPatient  || null,
+        emailMedecin:  clientDetails?.emailMedecin  || scan.client.emailMedecin  || null,
       } : null,
       mammographie: {
         densiteMammaire:          scan.densiteMammaire,
