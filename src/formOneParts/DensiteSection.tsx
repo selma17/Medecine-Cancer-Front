@@ -57,7 +57,7 @@ const DensiteSection: React.FC<Props> = ({
                 <img
                   src={densiteImages[option]}
                   alt={`Densité ${option}`}
-                  style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
+                  style={{ width: "160px", height: "180px", objectFit: "cover", borderRadius: "4px" }}
                 />
                 <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
                   Densité {option}

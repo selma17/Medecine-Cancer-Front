@@ -54,7 +54,7 @@ const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
     borderRadius: "8px", padding: "6px",
     boxShadow: "0 4px 16px rgba(0,0,0,0.15)", marginTop: "4px"
   }}>
-    <img src={src} alt={alt} style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
+    <img src={src} alt={alt} style={{ width: "160px", height: "180px", objectFit: "cover", borderRadius: "4px" }} />
     <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>{alt}</p>
   </div>
 );
