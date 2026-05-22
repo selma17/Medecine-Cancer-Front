@@ -86,32 +86,55 @@ const PatientManagement: React.FC = () => {
             distanceCentre: m.distanceCentre,
             sein: m.sein,
           })) || [],
-          asymetrie: scan.asymetrie,
-          typeAsymetrie: scan.typeAsymetrie,
+          asymetrie:                scan.asymetrie,
+          typeAsymetrie:            scan.typeAsymetrie,
+          localisationAsymetrie:    scan.localisationAsymetrie,
           distorsionArchitecturale: scan.distorsionArchitecturale,
-          calcifications: scan.calcifications,
-          typesCalcifications: scan.typesCalcifications,
-          signesAssocies: scan.signesAssociesMammographie || []
+          localisationDistorsion:   scan.localisationDistorsion,
+          calcifications:           scan.calcifications,
+          typesCalcifications:      scan.typesCalcifications,
+          localisationCalcifications: scan.localisationCalcifications,
+          signesAssocies:           scan.signesAssociesMammographie || []
         },
         echographie: {
           echostructureMammaire: scan.echostructureMammaire,
           masses: scan.massesEchostructure?.map((m: any) => ({
-            localisation: m.localisation,
-            mesure: m.mesure,
-            forme: m.forme,
-            contours: m.contours,
-            densite: m.densite,
-            orientation: m.orientation,
-            comportement: m.comportementDesFaisceauxUltrasons,
+            localisation:   m.localisation,
+            distanceCentre: m.distanceCentre,
+            mesure:         m.mesure,
+            forme:          m.forme,
+            contours:       m.contours,
+            densite:        m.densite,
+            orientation:    m.orientation,
+            comportement:   m.comportementDesFaisceauxUltrasons,
             calcifications: m.calcifications,
+            sein:           m.sein,
           })) || [],
           signesAssocies: scan.signesAssociesEchostructure || []
         },
         resultats: {
-          acrScore: scan.conclusionIA,
-          acrType: scan.acrType,
-          conclusionIA: scan.conclusionIA,
-          conduiteATenir: scan.conduiteATenir,
+          acrScore:            scan.conclusionIA,
+          acrType:             scan.acrType,
+          conclusionIA:        scan.conclusionIA,
+          conduiteATenir:      scan.conduiteATenir,
+          acrDroit:            scan.acrDroit            || "",
+          acrGauche:           scan.acrGauche           || "",
+          recommendationDroit:  scan.recommandationDroit  || "",
+          recommendationGauche: scan.recommandationGauche || "",
+          fullAiResponse:      scan.fullAiResponse       || "",
+          seinsAvecMasses:     (() => {
+            const masses = [
+              ...(scan.massesMammographie || []),
+              ...(scan.massesEchostructure || []),
+            ];
+            const s = new Set<string>();
+            masses.forEach((m: any) => {
+              if (m.sein?.toLowerCase().startsWith("droit")) s.add("droit");
+              if (m.sein?.toLowerCase().startsWith("gauche")) s.add("gauche");
+            });
+            if (s.size === 0 && masses.length > 0) { s.add("droit"); s.add("gauche"); }
+            return Array.from(s);
+          })(),
         }
       });
       setShowReport(true);
@@ -244,8 +267,8 @@ const PatientManagement: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 120px", padding: "12px 2rem", background: "#F8FAFC", borderBottom: "1px solid #e2e8f0" }}>
-              {["Nom et Prénom", "ACR", "Type", "Actions"].map((h, i) => (
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 120px", padding: "12px 2rem", background: "#F8FAFC", borderBottom: "1px solid #e2e8f0" }}>
+              {["Nom et Prénom", "ACR", "Actions"].map((h, i) => (
                 <div key={i} style={{ fontSize: "12px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: i > 0 ? "center" : "left" }}>{h}</div>
               ))}
             </div>
@@ -269,7 +292,7 @@ const PatientManagement: React.FC = () => {
               current.map((patient, i) => {
                 const acrStyle = getAcrColor(patient.acr);
                 return (
-                  <div key={patient.id} style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 120px", padding: "1rem 2rem", borderBottom: "1px solid #f1f5f9", alignItems: "center", transition: "background 0.15s", animation: `fadeInUp 0.3s ease ${i * 0.05}s both` }}
+                  <div key={patient.id} style={{ display: "grid", gridTemplateColumns: "2fr 100px 120px", padding: "1rem 2rem", borderBottom: "1px solid #f1f5f9", alignItems: "center", transition: "background 0.15s", animation: `fadeInUp 0.3s ease ${i * 0.05}s both` }}
                     onMouseEnter={(e) => e.currentTarget.style.background = "#F8FAFC"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "white"}
                   >
@@ -286,9 +309,7 @@ const PatientManagement: React.FC = () => {
                         {patient.acr || "—"}
                       </span>
                     </div>
-                    <div style={{ textAlign: "center", fontSize: "13px", color: "#64748b" }}>
-                      {patient.type || "—"}
-                    </div>
+
                     <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
                       <button onClick={() => handleView(patient.id)}
                         style={{ width: "34px", height: "34px", background: "#EEF2F7", border: "none", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}

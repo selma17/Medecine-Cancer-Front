@@ -122,7 +122,7 @@ const LoginForm: React.FC = () => {
               </label>
               <input
                 type="text"
-                placeholder="ex: Dr. Ben Ali"
+                placeholder="ex: Dr. Khouja"
                 value={nom}
                 onChange={(e) => setNom(e.target.value)}
                 required
@@ -146,7 +146,7 @@ const LoginForm: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="ex: Selma"
+                  placeholder="ex: Seif"
                   value={prenom}
                   onChange={(e) => setPrenom(e.target.value)}
                   required
