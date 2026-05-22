@@ -19,7 +19,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
   onSeinChange,
 }) => {
   // Fonction pour calculer la position de la masse selon l'horloge et la distance
-  const calculateMassPosition = (localisation: string, distance: string) => {
+  const calculateMassPosition = (localisation: string, distance: string, seinConcerne: "gauche" | "droite" = "gauche") => {
     if (!localisation || !distance) return {};
     
     const distanceNum = parseFloat(distance);
@@ -98,9 +98,12 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
           y = 0;
       }
     
+    // Pour le sein droit, le système d'horloge est en miroir (x inversé)
+    const finalX = seinConcerne === "droite" ? -x : x;
+
     return {
       position: 'absolute' as const,
-      left: `calc(50% + ${x}px)`,
+      left: `calc(50% + ${finalX}px)`,
       top: `calc(50% + ${y}px)`,
       transform: 'translate(-50%, -50%)',
     };
@@ -166,7 +169,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
                <div 
                  className="mass-indicator" 
                  title={`${localisation} - ${distanceCentre}mm`}
-                 style={calculateMassPosition(localisation, distanceCentre)}
+                 style={calculateMassPosition(localisation, distanceCentre, "gauche")}
                ></div>
              )}
           </div>
@@ -200,7 +203,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
                <div 
                  className="mass-indicator" 
                  title={`${localisation} - ${distanceCentre}mm`}
-                 style={calculateMassPosition(localisation, distanceCentre)}
+                 style={calculateMassPosition(localisation, distanceCentre, "droite")}
                ></div>
              )}
           </div>
@@ -245,17 +248,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
         </div>
       </div>
       
-      {/* Instructions d'utilisation */}
-      <div className="instructions">
-        <h4 className="instructions-title">Comment utiliser le système d'horloge :</h4>
-        <ul className="instructions-list">
-          <li><strong>12H :</strong> Position supérieure (vers le haut)</li>
-          <li><strong>3H :</strong> Position externe (vers la droite)</li>
-          <li><strong>6H :</strong> Position inférieure (vers le bas)</li>
-          <li><strong>9H :</strong> Position interne (vers la gauche)</li>
-          <li><strong>Positions intermédiaires :</strong> 1H, 2H, 4H, 5H, 7H, 8H, 10H, 11H</li>
-        </ul>
-      </div>
+
     </div>
   );
 };

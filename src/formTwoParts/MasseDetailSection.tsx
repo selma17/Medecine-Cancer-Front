@@ -39,8 +39,8 @@ const contoursData = [
 ];
 
 const orientationsData = [
-  { value: "parallèle", image: "/echo-orientation-parallele.png" },
-  { value: "non parallèle", image: "/echo-orientation-non-parallele.png" },
+  { value: "parallèle", image: "/echo-orientation-non-parallele.png" },
+  { value: "non parallèle", image: "/echo-orientation-parallele.png" },
 ];
 
 const echostructuresData = [
