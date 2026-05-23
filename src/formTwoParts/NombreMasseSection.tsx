@@ -10,7 +10,6 @@ const NombreMasseSection: React.FC<Props> = ({ nombreMasse, handleNombreMasseCha
     <div className="additional-section border rounded-lg mt-4 p-4">
       <label className="form-label">
         Nombre de masse(s) échographique(s) 
-        <span className="text-red-500 ml-1">*</span>
       </label>
       <input
         type="number"
@@ -20,7 +19,6 @@ const NombreMasseSection: React.FC<Props> = ({ nombreMasse, handleNombreMasseCha
         onChange={handleNombreMasseChange}
         className="form-input"
         placeholder="Ex: 1"
-        required
       />
       {nombreMasse === 0 && (
         <p className="text-orange-600 text-sm mt-2">
