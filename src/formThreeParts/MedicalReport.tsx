@@ -273,8 +273,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
 
     setSending(true);
     try {
-      // Generate PDF
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
       const patientName = `${scanData.clientInfo?.nom || ""} ${scanData.clientInfo?.prenom || ""}`.trim();
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
@@ -285,51 +283,152 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       const recoG = scanData.resultats?.recommendationGauche || "";
       const acrGlobal = scanData.resultats?.acrScore || "";
       const conduite = scanData.resultats?.conduiteATenir || "";
+      const today = new Date().toLocaleDateString("fr-FR");
 
-      doc.setFontSize(14);
+      // ── Génération PDF complet ──────────────────────────────────────────
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = 210;
+      const margin = 20;
+      let y = 18;
+
+      // En-tête
+      doc.setFillColor(27, 43, 107);
+      doc.rect(0, 0, pageW, 30, "F");
+      doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text("COMPTE RENDU D\'EXAMEN RADIOLOGIQUE", 105, 20, { align: "center" });
-      doc.text("ECHO MAMMOGRAPHIE", 105, 28, { align: "center" });
+      doc.setTextColor(255, 255, 255);
+      doc.text("COMPTE RENDU D'EXAMEN RADIOLOGIQUE", pageW / 2, 12, { align: "center" });
+      doc.setFontSize(10);
+      doc.text("ECHO-MAMMOGRAPHIE — Hôpital Régional Ksar Hellal", pageW / 2, 22, { align: "center" });
+
+      y = 40;
+      doc.setTextColor(30, 30, 30);
+
+      // Infos patient
       doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Patiente : ${patientName}`, 20, 40);
-      doc.text(`Date de naissance : ${scanData.clientInfo?.dateNaissance || "—"}`, 20, 47);
-      doc.text(`Renseignements : ${scanData.clientInfo?.renseignementsCliniques || "—"}`, 20, 54);
       doc.setFont("helvetica", "bold");
-      doc.text("CONCLUSION — CLASSIFICATION BI-RADS ACR 2013", 20, 68);
+      doc.setTextColor(27, 43, 107);
+      doc.text("INFORMATIONS PATIENT", margin, y); y += 7;
+      doc.setDrawColor(27, 43, 107);
+      doc.line(margin, y, pageW - margin, y); y += 5;
       doc.setFont("helvetica", "normal");
-      if (acrD) doc.text(`Sein droit : ACR ${acrD} — ${recoD}`, 20, 76);
-      if (acrG) doc.text(`Sein gauche : ACR ${acrG} — ${recoG}`, 20, 83);
-      if (!acrD && !acrG) {
-        doc.text(`Score global : ACR ${acrGlobal} — ${conduite}`, 20, 76);
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(10);
+      doc.text(`Nom et prénom : ${patientName}`, margin, y); y += 6;
+      doc.text(`Date de naissance : ${scanData.clientInfo?.dateNaissance || "—"}`, margin, y); y += 6;
+      doc.text(`Téléphone : ${scanData.clientInfo?.telephone || "—"}`, margin, y); y += 6;
+      doc.text(`Renseignements cliniques : ${scanData.clientInfo?.renseignementsCliniques || "—"}`, margin, y); y += 6;
+      doc.text(`Date de l'examen : ${today}`, margin, y); y += 10;
+
+      // Mammographie
+      if (scanData.mammographie) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(27, 43, 107);
+        doc.setFontSize(11);
+        doc.text("RÉSULTAT MAMMOGRAPHIE", margin, y); y += 7;
+        doc.line(margin, y, pageW - margin, y); y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        if (scanData.mammographie.densiteMammaire) {
+          doc.text(`Densité mammaire : ${scanData.mammographie.densiteMammaire}`, margin, y); y += 6;
+        }
+        if (scanData.mammographie.asymetrie) {
+          doc.text(`Asymétrie : ${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`, margin, y); y += 6;
+        }
+        if (scanData.mammographie.distorsionArchitecturale) {
+          doc.text(`Distorsion architecturale : Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`, margin, y); y += 6;
+        }
+        if (scanData.mammographie.calcifications) {
+          doc.text(`Calcifications : ${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`, margin, y); y += 6;
+        }
+        if (scanData.mammographie.masses && scanData.mammographie.masses.length > 0) {
+          doc.text(`Masses (${scanData.mammographie.masses.length}) :`, margin, y); y += 5;
+          scanData.mammographie.masses.forEach((m, i) => {
+            doc.text(`  M${i+1} — ${m.sein || ""} ${m.localisation || ""} | ${m.forme || ""} | ${m.contours || ""} | ${m.densite || ""}`, margin, y); y += 5;
+          });
+          y += 2;
+        }
       }
+
+      // Echographie
+      if (scanData.echographie) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(27, 43, 107);
+        doc.setFontSize(11);
+        doc.text("RÉSULTAT ÉCHOGRAPHIE", margin, y); y += 7;
+        doc.line(margin, y, pageW - margin, y); y += 5;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(10);
+        if (scanData.echographie.echostructureMammaire) {
+          doc.text(`Échostructure : ${scanData.echographie.echostructureMammaire}`, margin, y); y += 6;
+        }
+        if (scanData.echographie.masses && scanData.echographie.masses.length > 0) {
+          doc.text(`Masses (${scanData.echographie.masses.length}) :`, margin, y); y += 5;
+          scanData.echographie.masses.forEach((m, i) => {
+            doc.text(`  M${i+1} — ${m.sein || ""} ${m.localisation || ""} | ${m.mesure || ""}mm | ${m.forme || ""} | ${m.contours || ""} | ${m.orientation || ""}`, margin, y); y += 5;
+          });
+          y += 2;
+        }
+      }
+
+      // Conclusion
+      y += 4;
+      doc.setFillColor(240, 245, 255);
+      doc.rect(margin - 2, y - 4, pageW - 2*margin + 4, acrD && acrG ? 30 : 22, "F");
       doc.setFont("helvetica", "bold");
-      doc.text(`Dr. ${drName}`, 20, 100);
+      doc.setTextColor(27, 43, 107);
+      doc.setFontSize(12);
+      doc.text("CONCLUSION — CLASSIFICATION BI-RADS ACR 2013", margin, y); y += 8;
       doc.setFont("helvetica", "normal");
-      doc.text("Médecin Radiologue — Hôpital Régional Ksar Hellal", 20, 107);
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(11);
+      if (acrD) { doc.text(`Sein droit  : ACR ${acrD} — ${recoD}`, margin, y); y += 7; }
+      if (acrG) { doc.text(`Sein gauche : ACR ${acrG} — ${recoG}`, margin, y); y += 7; }
+      if (!acrD && !acrG) { doc.text(`Score global : ACR ${acrGlobal} — ${conduite}`, margin, y); y += 7; }
 
-      const pdfBase64 = doc.output("datauristring");
+      // Signature
+      y += 10;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Dr. ${drName}`, margin, y); y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.text("Médecin Radiologue", margin, y);
+      doc.text(`Effectué le ${today}`, pageW - margin, y - 5, { align: "right" });
 
-      const templateParams = {
-        doctor_name: drName,
-        patient_name: patientName,
-        date: new Date().toLocaleDateString("fr-FR"),
-        acr_droit: acrD ? `ACR ${acrD} — ${recoD}` : "—",
-        acr_gauche: acrG ? `ACR ${acrG} — ${recoG}` : "—",
-        acr_global: acrGlobal ? `ACR ${acrGlobal} — ${conduite}` : "—",
-      };
+      // Convertir en base64 (sans le préfixe data:application/pdf;base64,)
+      const pdfBase64 = doc.output("datauristring").split(",")[1];
+
+      // ── Envoi EmailJS ──────────────────────────────────────────────────
+      const message = [
+        `Patiente : ${patientName}`,
+        `Date : ${today}`,
+        acrD ? `Sein droit : ACR ${acrD} — ${recoD}` : "",
+        acrG ? `Sein gauche : ACR ${acrG} — ${recoG}` : "",
+        !acrD && !acrG ? `Score global : ACR ${acrGlobal} — ${conduite}` : "",
+      ].filter(Boolean).join("\n");
 
       const recipients = [emailPatient, emailMedecin].filter(Boolean) as string[];
       for (const email of recipients) {
         await emailjs.send(
           "Breast-AI-Report",
           "template_gpta0ho",
-          { ...templateParams, to_email: email },
+          {
+            to_email:     email,
+            doctor_name:  drName,
+            patient_name: patientName,
+            message,
+            pdf_content:  pdfBase64,
+          },
           "OzRMXEMMSi4xOz4LN"
         );
       }
 
-      alert(`Rapport envoyé avec succès à ${recipients.join(" et ")}`);
+      // Télécharger aussi le PDF localement
+      doc.save(`rapport_${patientName.replace(/\s+/g, "_")}_${today.replace(/\//g, "-")}.pdf`);
+
+      alert(`Rapport envoyé avec succès à ${recipients.join(" et ")} et téléchargé.`);
     } catch (err) {
       console.error(err);
       alert("Erreur lors de l\'envoi du rapport.");
@@ -392,17 +491,22 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
     ...(scanData.echographie?.masses?.map((m) => ({ ...m })) || []),
   ];
 
-  // Helper signes associés (supporte ancien format string[] et nouveau { nom, localisation }[])
+  // Helper signes associés — rendu ligne par ligne avec localisation
   const renderSignesAssocies = (
     signes?: Array<{ nom: string; localisation?: string }> | string[]
-  ) => {
+  ): React.ReactNode => {
     if (!signes || signes.length === 0) return null;
     if (typeof signes[0] === "string") {
-      return (signes as string[]).join(", ");
+      // Format string[] — la localisation peut être déjà dans la string "signe (loc)"
+      return (signes as string[]).map((s, i) => (
+        <div key={i} style={{ marginBottom: "2px" }}>• {s}</div>
+      ));
     }
-    return (signes as Array<{ nom: string; localisation?: string }>)
-      .map((s) => (s.localisation ? `${s.nom} (${s.localisation})` : s.nom))
-      .join(", ");
+    return (signes as Array<{ nom: string; localisation?: string }>).map((s, i) => (
+      <div key={i} style={{ marginBottom: "2px" }}>
+        • {s.nom}{s.localisation ? <span style={{ color: "#555" }}> — <em>{s.localisation}</em></span> : null}
+      </div>
+    ));
   };
 
   type SigneItem = { nom: string; localisation?: string } | string;
@@ -934,30 +1038,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                     <span className="mr-acr-badge">ACR {acrGlobal}</span>
                     <span className="mr-conduite">{scanData.resultats?.conduiteATenir || "—"}</span>
                   </p>
-                </div>
-              )}
-
-              {/* Résumé textuel de l'IA (optionnel, si texte disponible) */}
-              {fullResponse && fullResponse.length > 20 && (
-                <div
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "4px",
-                    padding: "8px 10px",
-                    marginBottom: "8px",
-                    fontSize: "9.5px",
-                    color: "#333",
-                    lineHeight: "1.6",
-                    whiteSpace: "pre-wrap",
-                    background: "#FAFBFE",
-                  }}
-                >
-                  <div
-                    style={{ fontWeight: "bold", color: "#1B2B6B", marginBottom: "4px", fontSize: "10px" }}
-                  >
-                    Analyse IA — Détail
-                  </div>
-                  {fullResponse}
                 </div>
               )}
 

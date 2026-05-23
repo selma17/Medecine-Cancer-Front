@@ -24,21 +24,24 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
     
     const distanceNum = parseFloat(distance);
     if (isNaN(distanceNum) || distanceNum <= 0) return {};
-    
-         // Rayon du sein (en pixels) - ajusté pour correspondre exactement aux labels
-     const breastRadius = 80;
-     
-     // Extraire l'heure de la localisation (ex: "2H" ou "2" -> 2)
-     const hourMatch = localisation.match(/(\d+)H?/);
-     if (!hourMatch) return {};
-     
-     const hour = parseInt(hourMatch[1]);
-     
-     // Valider que l'heure est entre 1 et 12
-     if (hour < 1 || hour > 12) return {};
-     
-     // Ajustement de précision : utiliser des positions exactes pour toutes les heures
-     const adjustedDistance = breastRadius * 0.8; // Position fixe à 80% du rayon pour tous
+
+    // Rayon visuel du sein en pixels
+    const breastRadius = 80;
+
+    // Distance max représentable = 60mm (bord du sein)
+    // Échelle proportionnelle : 1mm = breastRadius/60 pixels
+    const scale = breastRadius / 60;
+    // Min 8px pour rester visible, max breastRadius-6 pour rester dans le cercle
+    const adjustedDistance = Math.min(Math.max(distanceNum * scale, 8), breastRadius - 6);
+
+    // Extraire l'heure de la localisation (ex: "2H" ou "2" -> 2)
+    const hourMatch = localisation.match(/(\d+)H?/);
+    if (!hourMatch) return {};
+
+    const hour = parseInt(hourMatch[1]);
+
+    // Valider que l'heure est entre 1 et 12
+    if (hour < 1 || hour > 12) return {};
      
      // MAPPING DIRECT ET SIMPLE : chaque heure = position fixe avec ajustement de précision
      let x = 0;
