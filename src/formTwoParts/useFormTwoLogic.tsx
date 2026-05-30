@@ -26,9 +26,9 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [casSpeciauxLocalisations, setCasSpeciauxLocalisations] = useState<{ [key: string]: string }>({});
 
   const steps = [
-    { title: "Mammographie", status: "completed" as const },
-    { title: "Échographie", status: "in-progress" as const },
-    { title: "Conclusion", status: "pending" as const },
+    { title: "Mammographie", status: "terminé" as const },
+    { title: "Échographie", status: "en cours" as const },
+    { title: "Conclusion", status: "en attente" as const },
   ];
 
   const handleNombreMasseChange = (e: React.ChangeEvent<HTMLInputElement>) => {

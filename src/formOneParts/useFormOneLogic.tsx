@@ -131,9 +131,9 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   };
 
   const steps = [
-    { title: "Mammographie", status: "in-progress" as const },
-    { title: "Échographie", status: "pending" as const },
-    { title: "Conclusion", status: "pending" as const },
+    { title: "Mammographie", status: "en cours" as const },
+    { title: "Échographie", status: "en attente" as const },
+    { title: "Conclusion", status: "en attente" as const },
   ];
 
   const handleNextClick = () => {
