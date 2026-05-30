@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { ROUTES } from './navigation/navigationConfig';
 import { getAllPatients, deletePatient, Patient } from './services/patientService';
+import { transformScanDataForReport } from './formThreeParts/useFormThreeLogic';
 import { toast } from 'sonner';
 import MedicalReport from './formThreeParts/MedicalReport';
 import axios from 'axios';
@@ -67,53 +68,19 @@ const PatientManagement: React.FC = () => {
       setLoadingReport(true);
       const response = await axios.get(`${API_BASE_URL}/api/mammary-scan/${patient.scanId}`);
       const scan = response.data;
-      setReportScanData({
-        scanId: scan.id?.toString(),
-        clientInfo: scan.client ? {
-          nom: scan.client.nom,
-          prenom: scan.client.prenom,
-          dateNaissance: scan.client.dateNaissance,
-          telephone: scan.client.telephone,
-          renseignementsCliniques: scan.client.renseignementsCliniques
-        } : null,
-        mammographie: {
-          densiteMammaire: scan.densiteMammaire,
-          masses: scan.massesMammographie?.map((m: any) => ({
-            localisation: m.localisation,
-            forme: m.forme,
-            contours: m.contours,
-            densite: m.densite,
-            distanceCentre: m.distanceCentre,
-            sein: m.sein,
-          })) || [],
-          asymetrie: scan.asymetrie,
-          typeAsymetrie: scan.typeAsymetrie,
-          distorsionArchitecturale: scan.distorsionArchitecturale,
-          calcifications: scan.calcifications,
-          typesCalcifications: scan.typesCalcifications,
-          signesAssocies: scan.signesAssociesMammographie || []
-        },
-        echographie: {
-          echostructureMammaire: scan.echostructureMammaire,
-          masses: scan.massesEchostructure?.map((m: any) => ({
-            localisation: m.localisation,
-            mesure: m.mesure,
-            forme: m.forme,
-            contours: m.contours,
-            densite: m.densite,
-            orientation: m.orientation,
-            comportement: m.comportementDesFaisceauxUltrasons,
-            calcifications: m.calcifications,
-          })) || [],
-          signesAssocies: scan.signesAssociesEchostructure || []
-        },
-        resultats: {
-          acrScore: scan.conclusionIA,
-          acrType: scan.acrType,
-          conclusionIA: scan.conclusionIA,
-          conduiteATenir: scan.conduiteATenir,
+
+      // Détails complets du client (même logique que l'étape 3)
+      let clientDetails = null;
+      if (scan.client?.id) {
+        try {
+          const clientsRes = await axios.get(`${API_BASE_URL}/api/clients/by-medecin`);
+          clientDetails = clientsRes.data.find((c: any) => c.id === scan.client.id);
+        } catch (e) {
+          console.error('Erreur récupération client:', e);
         }
-      });
+      }
+
+      setReportScanData(transformScanDataForReport(scan, clientDetails));
       setShowReport(true);
     } catch {
       toast.error('Erreur lors du chargement du compte rendu');

@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { API_BASE_URL } from "../config";
 
-const detectSeinsAvecMasses = (scan: any): string[] => {
+export const detectSeinsAvecMasses = (scan: any): string[] => {
   const masses = [
     ...(scan.massesMammographie || []),
     ...(scan.massesEchostructure || []),
@@ -25,7 +25,7 @@ const detectSeinsAvecMasses = (scan: any): string[] => {
   return Array.from(seins);
 };
 
-const transformScanDataForReport = (scan: any, clientDetails?: any) => {
+export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
     return {
       scanId: scan.id?.toString(),
       clientInfo: scan.client ? {
