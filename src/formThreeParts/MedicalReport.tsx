@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface MedicalReportProps {
   isOpen: boolean;
@@ -260,6 +261,7 @@ const BreastClockDiagram: React.FC<{
 // ─── Composant principal ─────────────────────────────────────────────────────
 const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData }) => {
   const [sending, setSending] = useState(false);
+  const reportRef = React.useRef<HTMLDivElement>(null);
 
   const handleSendEmail = async () => {
     const emailPatient = scanData.clientInfo?.emailPatient;
@@ -283,95 +285,38 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       const acrG  = scanData.resultats?.acrGauche || "";
       const recoD = scanData.resultats?.recommendationDroit  || "";
       const recoG = scanData.resultats?.recommendationGauche || "";
-      const acrGlobal  = scanData.resultats?.acrScore      || "";
+      const acrGlobal      = scanData.resultats?.acrScore      || "";
       const conduiteGlobale = scanData.resultats?.conduiteATenir || "";
       const today = new Date().toLocaleDateString("fr-FR");
 
-      // ── Génération PDF ────────────────────────────────────────────────
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const pageW = 210;
-      const margin = 20;
-      let y = 18;
+      // ── Capture du rapport affiché via html2canvas ────────────────────
+      if (!reportRef.current) throw new Error("Rapport non disponible");
 
-      doc.setFillColor(27, 43, 107);
-      doc.rect(0, 0, pageW, 32, "F");
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(255, 255, 255);
-      doc.text("COMPTE RENDU D'EXAMEN RADIOLOGIQUE", pageW / 2, 13, { align: "center" });
-      doc.setFontSize(10);
-      doc.text("ECHO-MAMMOGRAPHIE — Hôpital Régional Ksar Hellal", pageW / 2, 23, { align: "center" });
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
 
-      y = 42;
-      doc.setTextColor(30, 30, 30);
+      const imgData = canvas.toDataURL("image/png");
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
 
-      // Infos patient
-      doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
-      doc.text("INFORMATIONS PATIENT", margin, y); y += 6;
-      doc.setDrawColor(27, 43, 107); doc.line(margin, y, pageW - margin, y); y += 5;
-      doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
-      doc.text(`Nom et prénom      : ${patientName}`, margin, y); y += 6;
-      doc.text(`Date de naissance  : ${scanData.clientInfo?.dateNaissance || "—"}`, margin, y); y += 6;
-      doc.text(`Téléphone          : ${scanData.clientInfo?.telephone || "—"}`, margin, y); y += 6;
-      const rc = scanData.clientInfo?.renseignementsCliniques || "—";
-      const rcLines = doc.splitTextToSize(`Renseignements     : ${rc}`, pageW - 2 * margin);
-      doc.text(rcLines, margin, y); y += rcLines.length * 5 + 4;
-
-      // Mammographie
-      if (scanData.mammographie) {
-        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
-        doc.text("MAMMOGRAPHIE", margin, y); y += 6;
-        doc.line(margin, y, pageW - margin, y); y += 5;
-        doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
-        if (scanData.mammographie.densiteMammaire) { doc.text(`Densité mammaire : ${scanData.mammographie.densiteMammaire}`, margin, y); y += 5; }
-        if (scanData.mammographie.asymetrie) { doc.text(`Asymétrie : ${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`, margin, y); y += 5; }
-        if (scanData.mammographie.distorsionArchitecturale) { doc.text(`Distorsion architecturale : Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`, margin, y); y += 5; }
-        if (scanData.mammographie.calcifications) { doc.text(`Calcifications : ${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`, margin, y); y += 5; }
-        if ((scanData.mammographie.masses?.length ?? 0) > 0) {
-          doc.text(`Masses (${scanData.mammographie.masses?.length ?? 0}) :`, margin, y); y += 5;
-          (scanData.mammographie.masses ?? []).forEach((m: { sein?: string; localisation?: string; forme?: string; contours?: string; densite?: string }, i: number) => {
-            doc.text(`  M${i+1} — Sein : ${m.sein || "—"} | Loc : ${m.localisation || "—"} | ${m.forme || "—"} | ${m.contours || "—"} | ${m.densite || "—"}`, margin, y); y += 5;
-          });
-        }
-        y += 3;
+      let heightLeft = imgH;
+      let position = 0;
+      doc.addImage(imgData, "PNG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+      while (heightLeft > 0) {
+        position -= pageH;
+        doc.addPage();
+        doc.addImage(imgData, "PNG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
       }
 
-      // Echographie
-      if (scanData.echographie) {
-        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
-        doc.text("ÉCHOGRAPHIE", margin, y); y += 6;
-        doc.line(margin, y, pageW - margin, y); y += 5;
-        doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
-        if (scanData.echographie.echostructureMammaire) { doc.text(`Échostructure : ${scanData.echographie.echostructureMammaire}`, margin, y); y += 5; }
-        if ((scanData.echographie.masses?.length ?? 0) > 0) {
-          doc.text(`Masses (${scanData.echographie.masses?.length ?? 0}) :`, margin, y); y += 5;
-          (scanData.echographie.masses ?? []).forEach((m: { sein?: string; localisation?: string; mesure?: string; forme?: string; contours?: string; orientation?: string }, i: number) => {
-            doc.text(`  M${i+1} — Sein : ${m.sein || "—"} | Loc : ${m.localisation || "—"} | ${m.mesure || "—"}mm | ${m.forme || "—"} | ${m.contours || "—"} | ${m.orientation || "—"}`, margin, y); y += 5;
-          });
-        }
-        y += 3;
-      }
-
-      // Conclusion
-      y += 4;
-      doc.setFillColor(240, 245, 255);
-      doc.rect(margin - 2, y - 3, pageW - 2 * margin + 4, acrD && acrG ? 32 : 22, "F");
-      doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
-      doc.text("CONCLUSION — CLASSIFICATION BI-RADS ACR 2013", margin, y); y += 8;
-      doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(11);
-      if (acrD) { doc.text(`Sein droit  : ACR ${acrD} — ${recoD}`, margin, y); y += 7; }
-      if (acrG) { doc.text(`Sein gauche : ACR ${acrG} — ${recoG}`, margin, y); y += 7; }
-      if (!acrD && !acrG) { doc.text(`Score global : ACR ${acrGlobal} — ${conduiteGlobale}`, margin, y); y += 7; }
-
-      // Signature
-      y += 10;
-      doc.setFontSize(10); doc.setFont("helvetica", "bold");
-      doc.text(drName, margin, y); y += 5;
-      doc.setFont("helvetica", "normal");
-      doc.text("Médecin Radiologue", margin, y);
-      doc.text(`Effectué le ${today}`, pageW - margin, y - 5, { align: "right" });
-
-      // Base64 sans préfixe
       const pdfBase64 = doc.output("datauristring").split(",")[1];
 
       // ── Appel backend ─────────────────────────────────────────────────
@@ -719,7 +664,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           </div>
 
           <div className="mr-content">
-            <div className="mr-page">
+            <div className="mr-page" ref={reportRef}>
 
               {/* ── EN-TÊTE ── */}
               <div className="mr-header-top">
