@@ -14,10 +14,10 @@ export const useStepFourLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const steps = [
-    { title: "Mammographie", status: "completed" as const },
-    { title: "Échographie", status: "completed" as const },
-    { title: "Conclusion", status: "completed" as const },
-    { title: "Conduite", status: "in-progress" as const },
+    { title: "Mammographie", status: "terminée" as const },
+    { title: "Échographie", status: "terminée" as const },
+    { title: "Conclusion", status: "terminée" as const },
+    { title: "Conduite", status: "en cours" as const },
   ];
 
   useEffect(() => {

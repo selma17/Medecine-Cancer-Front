@@ -112,9 +112,9 @@ export const useFormThreeLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [showMedicalReport, setShowMedicalReport] = useState<boolean>(false);
 
   const steps = [
-    { title: "Mammographie", status: "completed" as const },
-    { title: "Échographie",  status: "completed" as const },
-    { title: "Conclusion",   status: "in-progress" as const },
+    { title: "Mammographie", status: "terminée" as const },
+    { title: "Échographie",  status: "terminée" as const },
+    { title: "Conclusion",   status: "en cours" as const },
   ];
 
   
