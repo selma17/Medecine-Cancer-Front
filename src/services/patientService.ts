@@ -8,7 +8,6 @@ export interface Patient {
   nom: string;
   prenom: string;
   acr: string;
-  type: string;
   scanId?: number;
   clientId?: number;
   dateCreation?: string;
@@ -66,7 +65,6 @@ export const getAllPatients = async (): Promise<Patient[]> => {
         nom: client.nom,
         prenom: client.prenom,
         acr: '-',
-        type: '-',
         clientId: client.id,
         dateCreation: new Date().toISOString(),
       }));
@@ -77,7 +75,6 @@ export const getAllPatients = async (): Promise<Patient[]> => {
       nom: scan.client?.nom || 'N/A',
       prenom: scan.client?.prenom || 'N/A',
       acr: scan.acrScore || scan.conclusionIA || '-',
-      type: scan.acrType || '-',
       scanId: scan.id,
       clientId: scan.client?.id,
       dateCreation: new Date().toISOString(),
