@@ -57,10 +57,11 @@ const Dashboard: React.FC = () => {
         // Examens total = tous les scans du médecin (même sans rapport)
         const examensThisMonth = myScans.length;
 
-        // ACR 4-5
-        const acr45 = scansAvecRapport.filter((s: { conclusionIA?: string }) =>
-          s.conclusionIA === '4' || s.conclusionIA === '5'
-        ).length;
+        // ACR 4-5 (couvre 4, 4A, 4B, 4C, 5)
+        const acr45 = scansAvecRapport.filter((s: { conclusionIA?: string }) => {
+          const score = (s.conclusionIA || '').trim();
+          return score.startsWith('4') || score.startsWith('5');
+        }).length;
 
         setStatsData({
           totalPatients: String(totalPatients),
