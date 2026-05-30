@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import emailjs from "@emailjs/browser";
 import jsPDF from "jspdf";
 
 interface MedicalReportProps {
@@ -266,7 +265,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
     const emailPatient = scanData.clientInfo?.emailPatient;
     const emailMedecin = scanData.clientInfo?.emailMedecin;
 
-    if (!emailPatient && !emailMedecin) {
+    const recipients = [emailPatient, emailMedecin].filter(Boolean) as string[];
+    if (recipients.length === 0) {
       alert("Aucun email renseigné pour ce patient ou le médecin traitant.");
       return;
     }
@@ -276,162 +276,138 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       const patientName = `${scanData.clientInfo?.nom || ""} ${scanData.clientInfo?.prenom || ""}`.trim();
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
-      const drName = user?.nom && user?.prenom ? `${user.prenom} ${user.nom}` : user?.nom || "Médecin Radiologue";
-      const acrD = scanData.resultats?.acrDroit || "";
-      const acrG = scanData.resultats?.acrGauche || "";
-      const recoD = scanData.resultats?.recommendationDroit || "";
+      const drName = user?.nom && user?.prenom
+        ? `Dr. ${user.prenom} ${user.nom}`
+        : `Dr. ${user?.nom || "Médecin Radiologue"}`;
+      const acrD  = scanData.resultats?.acrDroit  || "";
+      const acrG  = scanData.resultats?.acrGauche || "";
+      const recoD = scanData.resultats?.recommendationDroit  || "";
       const recoG = scanData.resultats?.recommendationGauche || "";
-      const acrGlobal = scanData.resultats?.acrScore || "";
-      const conduite = scanData.resultats?.conduiteATenir || "";
+      const acrGlobal  = scanData.resultats?.acrScore      || "";
+      const conduiteGlobale = scanData.resultats?.conduiteATenir || "";
       const today = new Date().toLocaleDateString("fr-FR");
 
-      // ── Génération PDF complet ──────────────────────────────────────────
+      // ── Génération PDF ────────────────────────────────────────────────
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const pageW = 210;
       const margin = 20;
       let y = 18;
 
-      // En-tête
       doc.setFillColor(27, 43, 107);
-      doc.rect(0, 0, pageW, 30, "F");
+      doc.rect(0, 0, pageW, 32, "F");
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(255, 255, 255);
-      doc.text("COMPTE RENDU D'EXAMEN RADIOLOGIQUE", pageW / 2, 12, { align: "center" });
+      doc.text("COMPTE RENDU D'EXAMEN RADIOLOGIQUE", pageW / 2, 13, { align: "center" });
       doc.setFontSize(10);
-      doc.text("ECHO-MAMMOGRAPHIE — Hôpital Régional Ksar Hellal", pageW / 2, 22, { align: "center" });
+      doc.text("ECHO-MAMMOGRAPHIE — Hôpital Régional Ksar Hellal", pageW / 2, 23, { align: "center" });
 
-      y = 40;
+      y = 42;
       doc.setTextColor(30, 30, 30);
 
       // Infos patient
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(27, 43, 107);
-      doc.text("INFORMATIONS PATIENT", margin, y); y += 7;
-      doc.setDrawColor(27, 43, 107);
-      doc.line(margin, y, pageW - margin, y); y += 5;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(30, 30, 30);
-      doc.setFontSize(10);
-      doc.text(`Nom et prénom : ${patientName}`, margin, y); y += 6;
-      doc.text(`Date de naissance : ${scanData.clientInfo?.dateNaissance || "—"}`, margin, y); y += 6;
-      doc.text(`Téléphone : ${scanData.clientInfo?.telephone || "—"}`, margin, y); y += 6;
-      doc.text(`Renseignements cliniques : ${scanData.clientInfo?.renseignementsCliniques || "—"}`, margin, y); y += 6;
-      doc.text(`Date de l'examen : ${today}`, margin, y); y += 10;
+      doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
+      doc.text("INFORMATIONS PATIENT", margin, y); y += 6;
+      doc.setDrawColor(27, 43, 107); doc.line(margin, y, pageW - margin, y); y += 5;
+      doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+      doc.text(`Nom et prénom      : ${patientName}`, margin, y); y += 6;
+      doc.text(`Date de naissance  : ${scanData.clientInfo?.dateNaissance || "—"}`, margin, y); y += 6;
+      doc.text(`Téléphone          : ${scanData.clientInfo?.telephone || "—"}`, margin, y); y += 6;
+      const rc = scanData.clientInfo?.renseignementsCliniques || "—";
+      const rcLines = doc.splitTextToSize(`Renseignements     : ${rc}`, pageW - 2 * margin);
+      doc.text(rcLines, margin, y); y += rcLines.length * 5 + 4;
 
       // Mammographie
       if (scanData.mammographie) {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(27, 43, 107);
-        doc.setFontSize(11);
-        doc.text("RÉSULTAT MAMMOGRAPHIE", margin, y); y += 7;
+        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
+        doc.text("MAMMOGRAPHIE", margin, y); y += 6;
         doc.line(margin, y, pageW - margin, y); y += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(30, 30, 30);
-        doc.setFontSize(10);
-        if (scanData.mammographie.densiteMammaire) {
-          doc.text(`Densité mammaire : ${scanData.mammographie.densiteMammaire}`, margin, y); y += 6;
-        }
-        if (scanData.mammographie.asymetrie) {
-          doc.text(`Asymétrie : ${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`, margin, y); y += 6;
-        }
-        if (scanData.mammographie.distorsionArchitecturale) {
-          doc.text(`Distorsion architecturale : Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`, margin, y); y += 6;
-        }
-        if (scanData.mammographie.calcifications) {
-          doc.text(`Calcifications : ${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`, margin, y); y += 6;
-        }
-        if (scanData.mammographie.masses && scanData.mammographie.masses.length > 0) {
-          doc.text(`Masses (${scanData.mammographie.masses.length}) :`, margin, y); y += 5;
-          scanData.mammographie.masses.forEach((m, i) => {
-            doc.text(`  M${i+1} — ${m.sein || ""} ${m.localisation || ""} | ${m.forme || ""} | ${m.contours || ""} | ${m.densite || ""}`, margin, y); y += 5;
+        doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+        if (scanData.mammographie.densiteMammaire) { doc.text(`Densité mammaire : ${scanData.mammographie.densiteMammaire}`, margin, y); y += 5; }
+        if (scanData.mammographie.asymetrie) { doc.text(`Asymétrie : ${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`, margin, y); y += 5; }
+        if (scanData.mammographie.distorsionArchitecturale) { doc.text(`Distorsion architecturale : Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`, margin, y); y += 5; }
+        if (scanData.mammographie.calcifications) { doc.text(`Calcifications : ${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`, margin, y); y += 5; }
+        if ((scanData.mammographie.masses?.length ?? 0) > 0) {
+          doc.text(`Masses (${scanData.mammographie.masses?.length ?? 0}) :`, margin, y); y += 5;
+          (scanData.mammographie.masses ?? []).forEach((m: { sein?: string; localisation?: string; forme?: string; contours?: string; densite?: string }, i: number) => {
+            doc.text(`  M${i+1} — Sein : ${m.sein || "—"} | Loc : ${m.localisation || "—"} | ${m.forme || "—"} | ${m.contours || "—"} | ${m.densite || "—"}`, margin, y); y += 5;
           });
-          y += 2;
         }
+        y += 3;
       }
 
       // Echographie
       if (scanData.echographie) {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(27, 43, 107);
-        doc.setFontSize(11);
-        doc.text("RÉSULTAT ÉCHOGRAPHIE", margin, y); y += 7;
+        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
+        doc.text("ÉCHOGRAPHIE", margin, y); y += 6;
         doc.line(margin, y, pageW - margin, y); y += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(30, 30, 30);
-        doc.setFontSize(10);
-        if (scanData.echographie.echostructureMammaire) {
-          doc.text(`Échostructure : ${scanData.echographie.echostructureMammaire}`, margin, y); y += 6;
-        }
-        if (scanData.echographie.masses && scanData.echographie.masses.length > 0) {
-          doc.text(`Masses (${scanData.echographie.masses.length}) :`, margin, y); y += 5;
-          scanData.echographie.masses.forEach((m, i) => {
-            doc.text(`  M${i+1} — ${m.sein || ""} ${m.localisation || ""} | ${m.mesure || ""}mm | ${m.forme || ""} | ${m.contours || ""} | ${m.orientation || ""}`, margin, y); y += 5;
+        doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(10);
+        if (scanData.echographie.echostructureMammaire) { doc.text(`Échostructure : ${scanData.echographie.echostructureMammaire}`, margin, y); y += 5; }
+        if ((scanData.echographie.masses?.length ?? 0) > 0) {
+          doc.text(`Masses (${scanData.echographie.masses?.length ?? 0}) :`, margin, y); y += 5;
+          (scanData.echographie.masses ?? []).forEach((m: { sein?: string; localisation?: string; mesure?: string; forme?: string; contours?: string; orientation?: string }, i: number) => {
+            doc.text(`  M${i+1} — Sein : ${m.sein || "—"} | Loc : ${m.localisation || "—"} | ${m.mesure || "—"}mm | ${m.forme || "—"} | ${m.contours || "—"} | ${m.orientation || "—"}`, margin, y); y += 5;
           });
-          y += 2;
         }
+        y += 3;
       }
 
       // Conclusion
       y += 4;
       doc.setFillColor(240, 245, 255);
-      doc.rect(margin - 2, y - 4, pageW - 2*margin + 4, acrD && acrG ? 30 : 22, "F");
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(27, 43, 107);
-      doc.setFontSize(12);
+      doc.rect(margin - 2, y - 3, pageW - 2 * margin + 4, acrD && acrG ? 32 : 22, "F");
+      doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
       doc.text("CONCLUSION — CLASSIFICATION BI-RADS ACR 2013", margin, y); y += 8;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(30, 30, 30);
-      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30); doc.setFontSize(11);
       if (acrD) { doc.text(`Sein droit  : ACR ${acrD} — ${recoD}`, margin, y); y += 7; }
       if (acrG) { doc.text(`Sein gauche : ACR ${acrG} — ${recoG}`, margin, y); y += 7; }
-      if (!acrD && !acrG) { doc.text(`Score global : ACR ${acrGlobal} — ${conduite}`, margin, y); y += 7; }
+      if (!acrD && !acrG) { doc.text(`Score global : ACR ${acrGlobal} — ${conduiteGlobale}`, margin, y); y += 7; }
 
       // Signature
       y += 10;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Dr. ${drName}`, margin, y); y += 5;
+      doc.setFontSize(10); doc.setFont("helvetica", "bold");
+      doc.text(drName, margin, y); y += 5;
       doc.setFont("helvetica", "normal");
       doc.text("Médecin Radiologue", margin, y);
       doc.text(`Effectué le ${today}`, pageW - margin, y - 5, { align: "right" });
 
-      // Convertir en base64 (sans le préfixe data:application/pdf;base64,)
+      // Base64 sans préfixe
       const pdfBase64 = doc.output("datauristring").split(",")[1];
 
-      // ── Envoi EmailJS ──────────────────────────────────────────────────
-      const message = [
-        `Patiente : ${patientName}`,
-        `Date : ${today}`,
-        acrD ? `Sein droit : ACR ${acrD} — ${recoD}` : "",
-        acrG ? `Sein gauche : ACR ${acrG} — ${recoG}` : "",
-        !acrD && !acrG ? `Score global : ACR ${acrGlobal} — ${conduite}` : "",
-      ].filter(Boolean).join("\n");
+      // ── Appel backend ─────────────────────────────────────────────────
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://medecine-cancer-back.onrender.com";
+      const token = localStorage.getItem("token");
 
-      const recipients = [emailPatient, emailMedecin].filter(Boolean) as string[];
-      for (const email of recipients) {
-        await emailjs.send(
-          "Breast-AI-Report",
-          "template_gpta0ho",
-          {
-            to_email:     email,
-            doctor_name:  drName,
-            patient_name: patientName,
-            message,
-            pdf_content:  pdfBase64,
-          },
-          "OzRMXEMMSi4xOz4LN"
-        );
+      const response = await fetch(`${API_BASE_URL}/api/mail/send-report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          recipients,
+          patientName,
+          doctorName: drName,
+          date: today,
+          acrDroit: acrD,
+          acrGauche: acrG,
+          recommendationDroit: recoD,
+          recommendationGauche: recoG,
+          acrGlobal,
+          conduiteGlobale,
+          pdfBase64,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err);
       }
 
-      // Télécharger aussi le PDF localement
-      doc.save(`rapport_${patientName.replace(/\s+/g, "_")}_${today.replace(/\//g, "-")}.pdf`);
-
-      alert(`Rapport envoyé avec succès à ${recipients.join(" et ")} et téléchargé.`);
+      alert(`Rapport envoyé avec succès à ${recipients.join(" et ")}.`);
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de l\'envoi du rapport.");
+      alert("Erreur lors de l'envoi du rapport : " + (err as Error).message);
     } finally {
       setSending(false);
     }
