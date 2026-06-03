@@ -48,7 +48,15 @@ export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
         calcifications:           scan.calcifications,
         typesCalcifications:      scan.typesCalcifications,
         localisationCalcifications: scan.localisationCalcifications,
-        signesAssocies:           scan.signesAssociesMammographie || [],
+        signesAssocies: (() => {
+          const noms = scan.signesAssociesMammographie || [];
+          const locs = scan.localisationsSignesMammographie || [];
+          if (noms.length === 0) return [];
+          return noms.map((nom: string, i: number) => ({
+            nom,
+            localisation: locs[i] || "",
+          }));
+        })(),
         masses: scan.massesMammographie?.map((m: any) => ({
           localisation: m.localisation,
           forme:        m.forme,
@@ -59,7 +67,15 @@ export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
       },
       echographie: {
         echostructureMammaire: scan.echostructureMammaire,
-        signesAssocies:        scan.signesAssociesEchostructure || [],
+        signesAssocies: (() => {
+          const noms = scan.signesAssociesEchostructure || [];
+          const locs = scan.localisationsSignesEchostructure || [];
+          if (noms.length === 0) return [];
+          return noms.map((nom: string, i: number) => ({
+            nom,
+            localisation: locs[i] || "",
+          }));
+        })(),
         casSpeciaux:           scan.casSpeciaux || [],
         masses: scan.massesEchostructure?.map((m: any) => ({
           localisation:   m.localisation,
