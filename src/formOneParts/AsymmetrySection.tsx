@@ -20,7 +20,7 @@ const AsymmetrySection: React.FC<Props> = ({
   return (
     <>
       <div className="content">
-        <p className="title">Asymétrie si présente?</p>
+        <p className="title">Asymétrie</p>
         <div className="options">
           <label className="checkbox-label">
             <input type="radio" name="asymmetry" value="oui"
