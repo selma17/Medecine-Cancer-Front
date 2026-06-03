@@ -287,6 +287,19 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       const conduiteGlobale = scanData.resultats?.conduiteATenir  || "";
       const today = new Date().toLocaleDateString("fr-FR");
 
+      // ── Helpers signes associés / cas spéciaux pour le PDF ───────────
+      const signesToLines = (
+        signes?: Array<{ nom: string; localisation?: string }> | string[]
+      ): string[] => {
+        if (!signes || signes.length === 0) return [];
+        if (typeof signes[0] === "string") {
+          return (signes as string[]).map((s) => `• ${s}`);
+        }
+        return (signes as Array<{ nom: string; localisation?: string }>).map(
+          (s) => `• ${s.nom}${s.localisation ? ` — ${s.localisation}` : ""}`
+        );
+      };
+
       // ── Génération PDF structuré avec jsPDF ──────────────────────────
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const pageW = 210;
@@ -296,6 +309,28 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
 
       const checkNewPage = (needed = 10) => {
         if (y + needed > 272) { doc.addPage(); y = 15; }
+      };
+
+      // Dessine un sous-bloc « Signes associés » / « Cas spéciaux » dans le PDF
+      const drawSignesBlock = (title: string, lines: string[]) => {
+        if (lines.length === 0) return;
+        checkNewPage(12);
+        doc.setFillColor(238, 242, 247);
+        doc.rect(margin, y, contentW, 5, "FD");
+        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
+        doc.text(title, margin + 3, y + 3.5);
+        y += 5;
+        doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
+        lines.forEach((line) => {
+          const wrapped = doc.splitTextToSize(line, contentW - 6);
+          const lh = wrapped.length * 4 + 2;
+          checkNewPage(lh);
+          doc.setDrawColor(220, 220, 220);
+          doc.rect(margin, y, contentW, lh, "S");
+          doc.text(wrapped, margin + 3, y + 4);
+          y += lh;
+        });
+        y += 2;
       };
 
       // ── EN-TÊTE ──────────────────────────────────────────────────────
@@ -406,6 +441,9 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       }
       y += 3;
 
+      // Signes associés — mammographie (après le tableau des masses)
+      drawSignesBlock("Signes associés", signesToLines(scanData.mammographie?.signesAssocies));
+
       // ── ÉCHOGRAPHIE ──────────────────────────────────────────────────
       checkNewPage(40);
       doc.setFillColor(27, 43, 107);
@@ -461,6 +499,15 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         y += 3;
       }
       y += 3;
+
+      // Signes associés / cas spéciaux — échographie (après le tableau des masses)
+      drawSignesBlock("Signes associés", signesToLines(scanData.echographie?.signesAssocies));
+      drawSignesBlock(
+        "Cas spéciaux",
+        (scanData.echographie?.casSpeciaux || []).map(
+          (c) => `• ${c.nom}${c.localisation ? ` — ${c.localisation}` : ""}`
+        )
+      );
 
       // ── CONCLUSION ───────────────────────────────────────────────────
       checkNewPage(35);
@@ -992,13 +1039,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                       </strong>
                     </div>
                   </div>
-                  {scanData.mammographie?.signesAssocies &&
-                    (scanData.mammographie.signesAssocies as SigneItem[]).length > 0 && (
-                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
-                        Signes associés :{" "}
-                        <strong>{renderSignesAssocies(scanData.mammographie.signesAssocies as Array<{ nom: string; localisation?: string }> | string[])}</strong>
-                      </div>
-                    )}
                 </div>
 
                 {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
@@ -1034,6 +1074,22 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                     </div>
                   </>
                 )}
+
+                {scanData.mammographie?.signesAssocies &&
+                  (scanData.mammographie.signesAssocies as SigneItem[]).length > 0 && (
+                    <>
+                      <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                        Signes associés
+                      </div>
+                      <div className="mr-fused-block-body">
+                        {renderSignesAssocies(
+                          scanData.mammographie.signesAssocies as
+                            | Array<{ nom: string; localisation?: string }>
+                            | string[]
+                        )}
+                      </div>
+                    </>
+                  )}
               </div>
 
               {/* ── ÉCHOGRAPHIE ── */}
@@ -1045,24 +1101,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                     Échostructure mammaire :{" "}
                     <strong>{scanData.echographie?.echostructureMammaire || "—"}</strong>
                   </div>
-                  {scanData.echographie?.signesAssocies &&
-                    (scanData.echographie.signesAssocies as SigneItem[]).length > 0 && (
-                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
-                        Signes associés :{" "}
-                        <strong>{renderSignesAssocies(scanData.echographie.signesAssocies as Array<{ nom: string; localisation?: string }> | string[])}</strong>
-                      </div>
-                    )}
-                  {scanData.echographie?.casSpeciaux &&
-                    scanData.echographie.casSpeciaux.length > 0 && (
-                      <div className="mr-result-line" style={{ marginTop: "4px" }}>
-                        Cas spéciaux :{" "}
-                        <strong>
-                          {scanData.echographie.casSpeciaux
-                            .map((c) => (c.localisation ? `${c.nom} (${c.localisation})` : c.nom))
-                            .join(", ")}
-                        </strong>
-                      </div>
-                    )}
                 </div>
 
                 {scanData.echographie?.masses && scanData.echographie.masses.length > 0 && (
@@ -1101,6 +1139,48 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </>
+                )}
+
+                {((scanData.echographie?.signesAssocies &&
+                  (scanData.echographie.signesAssocies as SigneItem[]).length > 0) ||
+                  (scanData.echographie?.casSpeciaux &&
+                    scanData.echographie.casSpeciaux.length > 0)) && (
+                  <>
+                    <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                      Signes associés / Cas spéciaux
+                    </div>
+                    <div className="mr-fused-block-body">
+                      {scanData.echographie?.signesAssocies &&
+                        (scanData.echographie.signesAssocies as SigneItem[]).length > 0 && (
+                          <div style={{ marginBottom: "4px" }}>
+                            <div style={{ fontWeight: "bold", fontSize: "10px", color: "#1B2B6B", marginBottom: "2px" }}>
+                              Signes associés :
+                            </div>
+                            {renderSignesAssocies(
+                              scanData.echographie.signesAssocies as
+                                | Array<{ nom: string; localisation?: string }>
+                                | string[]
+                            )}
+                          </div>
+                        )}
+                      {scanData.echographie?.casSpeciaux &&
+                        scanData.echographie.casSpeciaux.length > 0 && (
+                          <div>
+                            <div style={{ fontWeight: "bold", fontSize: "10px", color: "#1B2B6B", marginBottom: "2px" }}>
+                              Cas spéciaux :
+                            </div>
+                            {scanData.echographie.casSpeciaux.map((c, i) => (
+                              <div key={i} style={{ marginBottom: "2px" }}>
+                                • {c.nom}
+                                {c.localisation ? (
+                                  <span style={{ color: "#555" }}> — <em>{c.localisation}</em></span>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </>
                 )}
