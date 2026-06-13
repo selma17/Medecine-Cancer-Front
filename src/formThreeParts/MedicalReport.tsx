@@ -389,12 +389,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       const mammoLines: string[] = [];
       if (scanData.mammographie?.densiteMammaire)
         mammoLines.push(`Densité mammaire : ${scanData.mammographie.densiteMammaire}`);
-      if (scanData.mammographie?.asymetrie)
-        mammoLines.push(`Asymétrie : ${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`);
-      if (scanData.mammographie?.distorsionArchitecturale)
-        mammoLines.push(`Distorsion architecturale : Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`);
-      if (scanData.mammographie?.calcifications)
-        mammoLines.push(`Calcifications : ${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`);
       if (!mammoLines.length) mammoLines.push("Aucune anomalie générale renseignée.");
 
       const mammoH = mammoLines.length * 5 + 4;
@@ -440,6 +434,19 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         y += 3;
       }
       y += 3;
+
+      // Résultats complémentaires — mammographie (après le tableau des masses)
+      const compLines: string[] = [];
+      compLines.push(`Asymétrie : ${scanData.mammographie?.asymetrie
+        ? `${scanData.mammographie.typeAsymetrie || "Oui"}${scanData.mammographie.localisationAsymetrie ? " — " + scanData.mammographie.localisationAsymetrie : ""}`
+        : "Non"}`);
+      compLines.push(`Distorsion architecturale : ${scanData.mammographie?.distorsionArchitecturale
+        ? `Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`
+        : "Non"}`);
+      compLines.push(`Calcifications : ${scanData.mammographie?.calcifications
+        ? `${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`
+        : "Non"}`);
+      drawSignesBlock("Résultats complémentaires", compLines);
 
       // Signes associés — mammographie (après le tableau des masses)
       drawSignesBlock("Signes associés", signesToLines(scanData.mammographie?.signesAssocies));
@@ -998,10 +1005,50 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
               <div className="mr-fused-block">
                 <div className="mr-fused-block-header">Données générales</div>
                 <div className="mr-fused-block-body">
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
-                    <div className="mr-result-line">
-                      Densité mammaire : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
+                  <div className="mr-result-line">
+                    Densité mammaire : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
+                  </div>
+                </div>
+
+                {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
+                  <>
+                    <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                      Masses détectées ({scanData.mammographie.masses.length})
                     </div>
+                    <div className="mr-fused-block-body">
+                      <table className="mr-masses-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Localisation</th>
+                            <th>Sein</th>
+                            <th>Forme</th>
+                            <th>Contours</th>
+                            <th>Densité</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {scanData.mammographie.masses.map((masse, i) => (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td>{masse.localisation || "—"}</td>
+                              <td>{masse.sein || "—"}</td>
+                              <td>{masse.forme || "—"}</td>
+                              <td>{masse.contours || "—"}</td>
+                              <td>{masse.densite || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
+                <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
+                  Résultats complémentaires
+                </div>
+                <div className="mr-fused-block-body">
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
                     <div className="mr-result-line">
                       Asymétrie :{" "}
                       <strong>
@@ -1040,40 +1087,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                     </div>
                   </div>
                 </div>
-
-                {scanData.mammographie?.masses && scanData.mammographie.masses.length > 0 && (
-                  <>
-                    <div className="mr-fused-block-header" style={{ borderTop: "1px solid #ccc" }}>
-                      Masses détectées ({scanData.mammographie.masses.length})
-                    </div>
-                    <div className="mr-fused-block-body">
-                      <table className="mr-masses-table">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Localisation</th>
-                            <th>Sein</th>
-                            <th>Forme</th>
-                            <th>Contours</th>
-                            <th>Densité</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {scanData.mammographie.masses.map((masse, i) => (
-                            <tr key={i}>
-                              <td>{i + 1}</td>
-                              <td>{masse.localisation || "—"}</td>
-                              <td>{masse.sein || "—"}</td>
-                              <td>{masse.forme || "—"}</td>
-                              <td>{masse.contours || "—"}</td>
-                              <td>{masse.densite || "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
 
                 {scanData.mammographie?.signesAssocies &&
                   (scanData.mammographie.signesAssocies as SigneItem[]).length > 0 && (

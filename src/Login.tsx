@@ -80,10 +80,14 @@ const LoginForm: React.FC = () => {
               </span>
             </div>
 
-            <h1 style={{ color: "white", fontSize: "26px", fontWeight: "600", margin: "0 0 1rem", lineHeight: "1.3" }}>
-              Plateforme d'aide au diagnostic mammaire
-            </h1>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", lineHeight: "1.7", margin: "0 0 2rem" }}>
+            <p style={{
+              color: "rgba(255,255,255,0.85)",
+              fontSize: "16px",
+              lineHeight: "1.8",
+              margin: "0 0 2rem",
+              fontWeight: "300",
+              letterSpacing: "0.3px",
+            }}>
               Rédaction assistée par l'IA des comptes rendus de mammographie et d'échographie.
             </p>
 
