@@ -128,28 +128,41 @@ const BreastClockDiagram: React.FC<{
 
   // Filtrer les masses de ce sein
   const sesMasses = masses.filter((m) => {
-    if (!m.sein) return true;
-    return m.sein.toLowerCase().includes(sein === "droit" ? "droit" : "gauche");
+    if (!m.sein) return false; // pas de sein → ne pas afficher
+    const s = m.sein.toLowerCase();
+    if (sein === "droit") return s.startsWith("droit");
+    return s.startsWith("gauche");
   });
 
   // Convertir une localisation horaire en angle (12h = haut, sens horaire)
   const heureToAngle = (loc: string): number | null => {
-    const match = loc.match(/(\d{1,2})\s*h/i);
+    const match = loc.match(/^(\d{1,2})\s*[hH]?$/);
     if (!match) return null;
     const h = parseInt(match[1]);
+    if (h < 1 || h > 12) return null;
     return ((h % 12) / 12) * 360 - 90; // -90 pour partir du haut
   };
 
-  // Quadrants textuels
+  // Quadrants textuels (formats : QSE, QSEG, QSED, UQE, RA, ou texte long)
   const quadrantAngle = (loc: string): number | null => {
-    const l = loc.toLowerCase();
-    if (l.includes("sup") && l.includes("ext")) return -45;
-    if (l.includes("sup") && l.includes("int")) return -135;
-    if (l.includes("inf") && l.includes("ext")) return 45;
-    if (l.includes("inf") && l.includes("int")) return 135;
-    if (l.includes("quadrant supérieur")) return -90;
-    if (l.includes("quadrant inférieur")) return 90;
-    if (l.includes("mamelonnaire") || l.includes("central")) return 0;
+    const l = loc.trim().toUpperCase().replace(/\s+/g, "");
+    // Abréviations standard
+    if (/^QSE[GD]?$/.test(l))    return -45;   // Supéro-Externe
+    if (/^QSI[GD]?$/.test(l))    return -135;  // Supéro-Interne
+    if (/^QIE[GD]?$/.test(l))    return 45;    // Inféro-Externe
+    if (/^QII[GD]?$/.test(l))    return 135;   // Inféro-Interne
+    if (/^UQE[GD]?$/.test(l))    return 0;     // Union Quadrants Externes → 3H
+    if (/^UQI[GD]?$/.test(l))    return 180;   // Union Quadrants Internes → 9H
+    if (/^UQS[GD]?$/.test(l))    return -90;   // Union Quadrants Supérieurs → 12H
+    if (/^UQINF[GD]?$/.test(l))  return 90;    // Union Quadrants Inférieurs → 6H
+    if (/^RA[GD]?$/.test(l))     return 0;     // Rétro-aréolaire → centre (angle 0, distance réduite)
+    // Texte long (fallback)
+    const ll = loc.toLowerCase();
+    if (ll.includes("sup") && ll.includes("ext")) return -45;
+    if (ll.includes("sup") && ll.includes("int")) return -135;
+    if (ll.includes("inf") && ll.includes("ext")) return 45;
+    if (ll.includes("inf") && ll.includes("int")) return 135;
+    if (ll.includes("central") || ll.includes("mamelonnaire")) return 0;
     return null;
   };
 
@@ -420,7 +433,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         y += 6;
         // En-têtes tableau
         const cols = [10, 22, 22, 28, 28, 28, 36];
-        const headers = ["#", "Sein", "Loc.", "Forme", "Contours", "Densité", ""];
+        const headers = ["N°", "Sein", "Loc.", "Forme", "Contours", "Densité", ""];
         let xc = margin;
         doc.setFillColor(27, 43, 107);
         doc.rect(margin, y, contentW, 5, "F");
@@ -501,12 +514,12 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
         doc.text(`Masses détectées (${echoMasses.length})`, margin + 3, y + 4);
         y += 6;
-        const cols2 = [10, 20, 20, 20, 22, 20, 22, 22, 0];
-        const heads2 = ["#", "Sein", "Loc.", "Mesure", "Forme", "Contours", "Écho.", "Orient.", ""];
+        const cols2 = [10, 16, 16, 16, 16, 16, 16, 18, 18, 18, 0];
+        const heads2 = ["N°", "Sein", "Loc.", "Rayon H.", "Dist.mam.", "Mesure", "Forme", "Contours", "Écho.", "Orient.", ""];
         let xc2 = margin;
         doc.setFillColor(27, 43, 107);
         doc.rect(margin, y, contentW, 5, "F");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
         heads2.forEach((h, i) => { doc.text(h, xc2 + 1, y + 3.5); xc2 += cols2[i]; });
         y += 5;
         echoMasses.forEach((m, i) => {
@@ -516,8 +529,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           doc.rect(margin, y, contentW, 5, "F");
           doc.setDrawColor(220, 220, 220);
           doc.rect(margin, y, contentW, 5, "S");
-          doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
-          const cells2 = [`${i+1}`, m.sein||"—", m.localisation||"—", m.mesure ? `${m.mesure}mm` : "—", m.forme||"—", m.contours||"—", m.densite||"—", m.orientation||"—", ""];
+          doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
+          const cells2 = [`${i+1}`, m.sein||"—", m.localisation||"—", m.localisation||"—", m.distanceCentre ? `${m.distanceCentre}mm` : "—", m.mesure ? `${m.mesure}mm` : "—", m.forme||"—", m.contours||"—", m.densite||"—", m.orientation||"—", ""];
           cells2.forEach((c, ci) => { doc.text(c, xc2 + 1, y + 3.5); xc2 += cols2[ci]; });
           y += 5;
         });
@@ -723,11 +736,23 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
 
   const seinUnique = seinsAvecMasses.length === 1;
 
-  // Toutes les masses (mammo + écho combinées pour la montre)
-  const allMasses: Array<{ localisation?: string; sein?: string; mesure?: string }> = [
-    ...(scanData.mammographie?.masses || []),
-    ...(scanData.echographie?.masses?.map((m) => ({ ...m })) || []),
-  ];
+  // Toutes les masses (mammo + écho) DÉDUPLIQUÉES par sein+localisation
+  // (mammo et écho décrivent les MÊMES lésions → ne pas les compter en double)
+  const allMasses: Array<{ localisation?: string; sein?: string; mesure?: string }> = (() => {
+    const mammo = scanData.mammographie?.masses || [];
+    const echo  = scanData.echographie?.masses?.map((m) => ({ ...m })) || [];
+    // Prendre les masses mammo comme base
+    const result = [...mammo];
+    // Ajouter les masses écho uniquement si aucune masse mammo n'a la même localisation + sein
+    const mammoKeys = new Set(mammo.map((m) => `${(m.sein || "").toLowerCase()}_${(m.localisation || "").toLowerCase()}`));
+    for (const m of echo) {
+      const key = `${(m.sein || "").toLowerCase()}_${(m.localisation || "").toLowerCase()}`;
+      if (!mammoKeys.has(key)) {
+        result.push(m);
+      }
+    }
+    return result;
+  })();
 
   // Helper signes associés — rendu ligne par ligne avec localisation
   const renderSignesAssocies = (
@@ -1034,7 +1059,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
               {/* ── MAMMOGRAPHIE ── */}
               <div className="mr-section-title">Résultat — Mammographie</div>
               <div className="mr-fused-block">
-                <div className="mr-fused-block-header">Données générales</div>
                 <div className="mr-fused-block-body">
                   <div className="mr-result-line">
                     Densité mammaire : <strong>{scanData.mammographie?.densiteMammaire || "—"}</strong>
@@ -1050,7 +1074,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                       <table className="mr-masses-table">
                         <thead>
                           <tr>
-                            <th>#</th>
+                            <th>Masse n°</th>
                             <th>Localisation</th>
                             <th>Sein</th>
                             <th>Forme</th>
@@ -1154,7 +1178,6 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
               {/* ── ÉCHOGRAPHIE ── */}
               <div className="mr-section-title">Résultat — Échographie</div>
               <div className="mr-fused-block">
-                <div className="mr-fused-block-header">Données générales</div>
                 <div className="mr-fused-block-body">
                   <div className="mr-result-line">
                     Échostructure mammaire :{" "}
@@ -1171,8 +1194,10 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                       <table className="mr-masses-table">
                         <thead>
                           <tr>
-                            <th>#</th>
+                            <th>Masse n°</th>
                             <th>Localisation</th>
+                            <th>Rayon horaire</th>
+                            <th>Dist. mamelon</th>
                             <th>Sein</th>
                             <th>Mesure</th>
                             <th>Forme</th>
@@ -1187,6 +1212,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                             <tr key={i}>
                               <td>{i + 1}</td>
                               <td>{masse.localisation || "—"}</td>
+                              <td>{masse.localisation || "—"}</td>
+                              <td>{masse.distanceCentre ? `${masse.distanceCentre} mm` : "—"}</td>
                               <td>{masse.sein || "—"}</td>
                               <td>{masse.mesure ? `${masse.mesure} mm` : "—"}</td>
                               <td>{masse.forme || "—"}</td>
@@ -1268,15 +1295,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
               {/* ── CARTOGRAPHIE MAMMAIRE (Montre) ── */}
               {allMasses.length > 0 && (
                 <>
-                  <div className="mr-section-title">Cartographie des lésions — Aide chirurgicale</div>
+                  <div className="mr-section-title">CARTOGRAPHIE DES LÉSIONS</div>
                   <div className="mr-clock-section">
-                    <div
-                      className="mr-fused-block-header"
-                      style={{ fontSize: "9px", fontStyle: "italic", fontWeight: "normal" }}
-                    >
-                      Localisation horaire des masses (vue de face, patiente debout).
-                      Sein droit : sens horaire patient. Sein gauche : sens horaire miroir.
-                    </div>
                     <div className="mr-clock-body">
                       <BreastClockDiagram
                         masses={allMasses}
