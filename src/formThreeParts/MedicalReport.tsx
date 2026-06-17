@@ -34,6 +34,9 @@ interface MedicalReportProps {
       calcifications?: boolean;
       typesCalcifications?: string;
       localisationCalcifications?: string;
+      calcificationsBenignes?: string;
+      calcificationsSuspectes?: string;
+      distributionMicrocalcifications?: string;
       signesAssocies?: Array<{ nom: string; localisation?: string }> | string[];
     };
     echographie?: {
@@ -52,6 +55,11 @@ interface MedicalReportProps {
       }>;
       signesAssocies?: Array<{ nom: string; localisation?: string }> | string[];
       casSpeciaux?: Array<{ nom: string; localisation?: string }>;
+      // Adénopathie axillaire
+      adenopathieLocalisation?: string;
+      adenopathieChaineBerg?: string;
+      adenopathieNombre?: string;
+      adenopathieMesure?: string;
     };
     resultats?: {
       acrScore?: string;
@@ -443,9 +451,19 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
       compLines.push(`Distorsion architecturale : ${scanData.mammographie?.distorsionArchitecturale
         ? `Oui${scanData.mammographie.localisationDistorsion ? " — " + scanData.mammographie.localisationDistorsion : ""}`
         : "Non"}`);
-      compLines.push(`Calcifications : ${scanData.mammographie?.calcifications
-        ? `${scanData.mammographie.typesCalcifications || "Oui"}${scanData.mammographie.localisationCalcifications ? " — " + scanData.mammographie.localisationCalcifications : ""}`
-        : "Non"}`);
+      compLines.push(`Calcifications : ${scanData.mammographie?.calcifications ? "Oui" : "Non"}`);
+      if (scanData.mammographie?.calcifications) {
+        if (scanData.mammographie.typesCalcifications)
+          compLines.push(`  Type : ${scanData.mammographie.typesCalcifications}`);
+        if (scanData.mammographie.localisationCalcifications)
+          compLines.push(`  Localisation : ${scanData.mammographie.localisationCalcifications}`);
+        if (scanData.mammographie.calcificationsBenignes)
+          compLines.push(`  Bénignes : ${scanData.mammographie.calcificationsBenignes}`);
+        if (scanData.mammographie.calcificationsSuspectes)
+          compLines.push(`  Suspectes : ${scanData.mammographie.calcificationsSuspectes}`);
+        if (scanData.mammographie.distributionMicrocalcifications)
+          compLines.push(`  Distribution : ${scanData.mammographie.distributionMicrocalcifications}`);
+      }
       drawSignesBlock("Résultats complémentaires", compLines);
 
       // Signes associés — mammographie (après le tableau des masses)
@@ -515,6 +533,19 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           (c) => `• ${c.nom}${c.localisation ? ` — ${c.localisation}` : ""}`
         )
       );
+
+      // Adénopathie axillaire — détails dans le PDF
+      if (scanData.echographie?.adenopathieLocalisation) {
+        const adenLines: string[] = [];
+        adenLines.push(`Localisation : ${scanData.echographie.adenopathieLocalisation}`);
+        if (scanData.echographie.adenopathieChaineBerg)
+          adenLines.push(`Chaîne de Berg : ${scanData.echographie.adenopathieChaineBerg}`);
+        if (scanData.echographie.adenopathieNombre)
+          adenLines.push(`Nombre : ${scanData.echographie.adenopathieNombre}`);
+        if (scanData.echographie.adenopathieMesure)
+          adenLines.push(`Mesure : ${scanData.echographie.adenopathieMesure} mm`);
+        drawSignesBlock("Adénopathie axillaire — détail", adenLines);
+      }
 
       // ── CONCLUSION ───────────────────────────────────────────────────
       checkNewPage(35);
@@ -1073,17 +1104,32 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                           : "Non"}
                       </strong>
                     </div>
-                    <div className="mr-result-line">
+                    <div className="mr-result-line" style={{ gridColumn: "1 / -1" }}>
                       Calcifications :{" "}
                       <strong>
                         {scanData.mammographie?.calcifications
-                          ? `Oui — ${scanData.mammographie.typesCalcifications || ""}${
-                              scanData.mammographie.localisationCalcifications
-                                ? ` (${scanData.mammographie.localisationCalcifications})`
-                                : ""
-                            }`
+                          ? "Oui"
                           : "Non"}
                       </strong>
+                      {scanData.mammographie?.calcifications && (
+                        <div style={{ marginTop: "4px", paddingLeft: "12px", fontSize: "9.5px", color: "#333" }}>
+                          {scanData.mammographie.typesCalcifications && (
+                            <div>Type : <strong>{scanData.mammographie.typesCalcifications}</strong></div>
+                          )}
+                          {scanData.mammographie.localisationCalcifications && (
+                            <div>Localisation : <strong>{scanData.mammographie.localisationCalcifications}</strong></div>
+                          )}
+                          {scanData.mammographie.calcificationsBenignes && (
+                            <div>Bénignes : <strong>{scanData.mammographie.calcificationsBenignes}</strong></div>
+                          )}
+                          {scanData.mammographie.calcificationsSuspectes && (
+                            <div>Suspectes : <strong>{scanData.mammographie.calcificationsSuspectes}</strong></div>
+                          )}
+                          {scanData.mammographie.distributionMicrocalcifications && (
+                            <div>Distribution : <strong>{scanData.mammographie.distributionMicrocalcifications}</strong></div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1194,6 +1240,26 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                             ))}
                           </div>
                         )}
+                      {/* Détail adénopathie axillaire */}
+                      {scanData.echographie?.adenopathieLocalisation && (
+                        <div style={{ marginTop: "6px", padding: "8px 10px", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontWeight: "bold", fontSize: "10px", color: "#1B2B6B", marginBottom: "4px" }}>
+                            Adénopathie axillaire — détail :
+                          </div>
+                          <div style={{ fontSize: "9.5px", color: "#333" }}>
+                            <div>Localisation : <strong>{scanData.echographie.adenopathieLocalisation}</strong></div>
+                            {scanData.echographie.adenopathieChaineBerg && (
+                              <div>Chaîne de Berg : <strong>{scanData.echographie.adenopathieChaineBerg}</strong></div>
+                            )}
+                            {scanData.echographie.adenopathieNombre && (
+                              <div>Nombre : <strong>{scanData.echographie.adenopathieNombre}</strong></div>
+                            )}
+                            {scanData.echographie.adenopathieMesure && (
+                              <div>Mesure : <strong>{scanData.echographie.adenopathieMesure} mm</strong></div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

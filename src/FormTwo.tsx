@@ -245,6 +245,14 @@ const FormTwo: React.FC = () => {
                 handleSigneLocalisationChange={logic.handleSigneLocalisationChange}
                 signesAssocies={logic.signesAssocies}
                 handleSignesAssociesChange={logic.handleSignesAssociesChange}
+                adenopathieLocalisation={logic.adenopathieLocalisation}
+                adenopathieChaineBerg={logic.adenopathieChaineBerg}
+                adenopathieNombre={logic.adenopathieNombre}
+                adenopathieMesure={logic.adenopathieMesure}
+                onAdenopathieLocalisationChange={logic.onAdenopathieLocalisationChange}
+                onAdenopathieChaineBergChange={logic.onAdenopathieChaineBergChange}
+                onAdenopathieNombreChange={logic.onAdenopathieNombreChange}
+                onAdenopathieMesureChange={logic.onAdenopathieMesureChange}
               />
               <CasSpeciauxSection
                 casSpeciaux={logic.casSpeciaux}

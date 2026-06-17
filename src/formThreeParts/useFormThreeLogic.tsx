@@ -48,6 +48,9 @@ export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
         calcifications:           scan.calcifications,
         typesCalcifications:      scan.typesCalcifications,
         localisationCalcifications: scan.localisationCalcifications,
+        calcificationsBenignes:   scan.calcificationsBenignes || null,
+        calcificationsSuspectes:  scan.calcificationsSuspectes || null,
+        distributionMicrocalcifications: scan.distributionMicrocalcifications || null,
         signesAssocies: (() => {
           const noms = scan.signesAssociesMammographie || [];
           const locs = scan.localisationsSignesMammographie || [];
@@ -77,6 +80,11 @@ export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
           }));
         })(),
         casSpeciaux:           scan.casSpeciaux || [],
+        // Adénopathie axillaire — détails
+        adenopathieLocalisation:  scan.adenopathieLocalisation || null,
+        adenopathieChaineBerg:    scan.adenopathieChaineBerg || null,
+        adenopathieNombre:        scan.adenopathieNombre || null,
+        adenopathieMesure:        scan.adenopathieMesure || null,
         masses: scan.massesEchostructure?.map((m: any) => ({
           localisation:   m.localisation,
           distanceCentre: m.distanceCentre,

@@ -25,6 +25,12 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [casSpeciaux, setCasSpeciaux] = useState<string[]>([]);
   const [casSpeciauxLocalisations, setCasSpeciauxLocalisations] = useState<{ [key: string]: string }>({});
 
+  // Adénopathie axillaire — champs détaillés
+  const [adenopathieLocalisation, setAdenopathieLocalisation] = useState<string>("");
+  const [adenopathieChaineBerg, setAdenopathieChaineBerg] = useState<string[]>([]);
+  const [adenopathieNombre, setAdenopathieNombre] = useState<string>("");
+  const [adenopathieMesure, setAdenopathieMesure] = useState<string>("");
+
   const steps = [
     { title: "Mammographie", status: "terminée" as const },
     { title: "Échographie", status: "en cours" as const },
@@ -60,7 +66,16 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
     setters[field]((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
   };
 
-  const handleSignesAssociesChange = (selected: string[]) => setSignesAssocies(selected);
+  const handleSignesAssociesChange = (selected: string[]) => {
+    setSignesAssocies(selected);
+    // Reset adénopathie si décochée
+    if (!selected.includes("Adénopathies axillaires")) {
+      setAdenopathieLocalisation("");
+      setAdenopathieChaineBerg([]);
+      setAdenopathieNombre("");
+      setAdenopathieMesure("");
+    }
+  };
 
   const handleSigneLocalisationChange = (sign: string, value: string) =>
     setSignesLocalisations((prev) => ({ ...prev, [sign]: value }));
@@ -139,6 +154,13 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
         localisation: casSpeciauxLocalisations[name] || "",
       })),
 
+      // Adénopathie axillaire — détails
+      adenopathieLocalisation:  signesAssocies.includes("Adénopathies axillaires") ? adenopathieLocalisation || null : null,
+      adenopathieChaineBerg:    signesAssocies.includes("Adénopathies axillaires") && adenopathieChaineBerg.length > 0
+        ? adenopathieChaineBerg.join(", ") : null,
+      adenopathieNombre:        signesAssocies.includes("Adénopathies axillaires") ? adenopathieNombre || null : null,
+      adenopathieMesure:        signesAssocies.includes("Adénopathies axillaires") ? adenopathieMesure || null : null,
+
       conclusionRadiologue: null,
       conduiteRadiologue:   null,
       conclusionIA:         null,
@@ -192,5 +214,14 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
     handleSigneLocalisationChange,
     handleCasSpeciauxChange,
     handleCasSpeciauxLocalisationChange,
+    // Adénopathie
+    adenopathieLocalisation,
+    adenopathieChaineBerg,
+    adenopathieNombre,
+    adenopathieMesure,
+    onAdenopathieLocalisationChange: setAdenopathieLocalisation,
+    onAdenopathieChaineBergChange: setAdenopathieChaineBerg,
+    onAdenopathieNombreChange: setAdenopathieNombre,
+    onAdenopathieMesureChange: setAdenopathieMesure,
   };
 };
