@@ -5,6 +5,7 @@ interface Props {
   index: number;
   localisation: string;
   distanceCentre: string;
+  rayonHoraire: string;
   sein: "gauche" | "droite";
   mesure: string;
   forme: string;
@@ -15,6 +16,7 @@ interface Props {
   calcification: string;
   onLocalisationChange: (index: number, value: string) => void;
   onDistanceCentreChange: (index: number, value: string) => void;
+  onRayonHoraireChange: (index: number, value: string) => void;
   onSeinChange: (index: number, value: "gauche" | "droite") => void;
   onMesureChange: (index: number, value: string) => void;
   onMassesDataChange: (
@@ -44,25 +46,47 @@ const orientationsData = [
 ];
 
 const echostructuresData = [
-  "haute", "isoéchogène", "hypoéchogène", "anéchogène", "complexe",
+  { value: "haute", image: "/echo-struct-haute.png" },
+  { value: "isoéchogène", image: "/echo-struct-isoechogene.png" },
+  { value: "hypoéchogène", image: "/echo-struct-hypoechogene.png" },
+  { value: "anéchogène", image: "/echo-struct-anechogene.png" },
+  { value: "complexe", image: "/echo-struct-complexe.png" },
+];
+
+const comportementsData = [
+  { value: "neutre", image: "/echo-comport-neutre.png" },
+  { value: "renforcement postérieur", image: "/echo-comport-renforcement.png" },
+  { value: "atténuation postérieure", image: "/echo-comport-attenuation.png" },
+  { value: "combiné", image: "/echo-comport-combine.png" },
+];
+
+const calcificationsEchoData = [
+  { value: "dans la masse", image: "/echo-calcif-dans-masse.png" },
+  { value: "à distance de la masse", image: "/echo-calcif-distance.png" },
+  { value: "intra-canalaire", image: "/echo-calcif-intracanalaire.png" },
 ];
 
 const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
   <div style={{
-    position: "absolute", top: "100%", left: 0, zIndex: 100,
-    background: "white", border: "1px solid #e2e8f0",
-    borderRadius: "8px", padding: "6px",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.15)", marginTop: "4px"
+    position: "absolute",
+    top: 0,
+    left: "calc(100% + 12px)",
+    zIndex: 100,
+    background: "white",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    padding: "6px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
   }}>
-    <img src={src} alt={alt} style={{ width: "160px", height: "180px", objectFit: "cover", borderRadius: "4px" }} />
+    <img src={src} alt={alt} style={{ width: "220px", height: "180px", objectFit: "cover", borderRadius: "4px" }} />
     <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>{alt}</p>
   </div>
 );
 
 const MasseDetailSection: React.FC<Props> = ({
-  index, localisation, distanceCentre, sein, mesure,
+  index, localisation, distanceCentre, rayonHoraire, sein, mesure,
   forme, contour, densite, orientation, comportement, calcification,
-  onLocalisationChange, onDistanceCentreChange, onSeinChange,
+  onLocalisationChange, onDistanceCentreChange, onRayonHoraireChange, onSeinChange,
   onMesureChange, onMassesDataChange,
 }) => {
   const [hoveredItem, setHoveredItem] = useState("");
@@ -83,9 +107,11 @@ const MasseDetailSection: React.FC<Props> = ({
         <BreastSchema
           localisation={localisation}
           distanceCentre={distanceCentre}
+          rayonHoraire={rayonHoraire}
           sein={sein}
           onLocalisationChange={(value) => onLocalisationChange(index, value)}
           onDistanceCentreChange={(value) => onDistanceCentreChange(index, value)}
+          onRayonHoraireChange={(value) => onRayonHoraireChange(index, value)}
           onSeinChange={(value) => onSeinChange(index, value)}
         />
       </div>
@@ -156,14 +182,20 @@ const MasseDetailSection: React.FC<Props> = ({
       <div className="form-radio-section mt-4">
         <p className="form-label">Échostructure <span className="text-red-500 ml-1">*</span></p>
         {echostructuresData.map((item) => (
-          <label key={item} className="radio-label">
-            <input type="radio" name={`densite-${index}`}
-              checked={densite === item}
-              onChange={() => handleRadioChange("densite", item)}
-              required
-            />
-            {item}
-          </label>
+          <div key={item.value} style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredItem(`densite-${item.value}`)}
+            onMouseLeave={() => setHoveredItem("")}
+          >
+            <label className="radio-label">
+              <input type="radio" name={`densite-${index}`}
+                checked={densite === item.value}
+                onChange={() => handleRadioChange("densite", item.value)}
+                required
+              />
+              {item.value}
+            </label>
+            {hoveredItem === `densite-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
+          </div>
         ))}
       </div>
 
@@ -190,28 +222,40 @@ const MasseDetailSection: React.FC<Props> = ({
       {/* Comportement */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Comportement</p>
-        {["neutre", "renforcement postérieur", "atténuation postérieure", "combiné"].map((comp) => (
-          <label key={comp} className="radio-label">
-            <input type="radio" name={`comportement-${index}`}
-              checked={comportement === comp}
-              onChange={() => handleRadioChange("comportement", comp)}
-            />
-            {comp}
-          </label>
+        {comportementsData.map((item) => (
+          <div key={item.value} style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredItem(`comportement-${item.value}`)}
+            onMouseLeave={() => setHoveredItem("")}
+          >
+            <label className="radio-label">
+              <input type="radio" name={`comportement-${index}`}
+                checked={comportement === item.value}
+                onChange={() => handleRadioChange("comportement", item.value)}
+              />
+              {item.value}
+            </label>
+            {hoveredItem === `comportement-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
+          </div>
         ))}
       </div>
 
       {/* Calcifications */}
       <div className="form-radio-section mt-4">
         <p className="form-label">Calcifications</p>
-        {["dans la masse", "à distance de la masse", "intra-canalaire"].map((calc) => (
-          <label key={calc} className="radio-label">
-            <input type="radio" name={`calcification-${index}`}
-              checked={calcification === calc}
-              onChange={() => handleRadioChange("calcification", calc)}
-            />
-            {calc}
-          </label>
+        {calcificationsEchoData.map((item) => (
+          <div key={item.value} style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredItem(`calcification-${item.value}`)}
+            onMouseLeave={() => setHoveredItem("")}
+          >
+            <label className="radio-label">
+              <input type="radio" name={`calcification-${index}`}
+                checked={calcification === item.value}
+                onChange={() => handleRadioChange("calcification", item.value)}
+              />
+              {item.value}
+            </label>
+            {hoveredItem === `calcification-${item.value}` && <HoverImage src={item.image} alt={item.value} />}
+          </div>
         ))}
       </div>
 

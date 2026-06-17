@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useScanStore } from "../../src/store/useScanStore";
+import { toast } from "sonner";
 
 export const useFormOneLogic = (navigate: (path: string) => void) => {
   const { setFormOneData } = useScanStore();
@@ -137,6 +138,38 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   ];
 
   const handleNextClick = () => {
+    // ── Validation ──────────────────────────────────────────────────────────
+    if (selected.length === 0) {
+      toast.error("⚠️ Veuillez sélectionner la densité mammaire");
+      return;
+    }
+    if (!massNumber || Number(massNumber) <= 0) {
+      toast.error("⚠️ Veuillez indiquer le nombre de masses");
+      return;
+    }
+    const nbMasses = Number(massNumber);
+    for (let i = 0; i < nbMasses; i++) {
+      if (!localisations[i]) { toast.error(`⚠️ Masse ${i+1} : localisation manquante`); return; }
+      if (!formes[i])        { toast.error(`⚠️ Masse ${i+1} : forme manquante`); return; }
+      if (!contours[i])      { toast.error(`⚠️ Masse ${i+1} : contours manquants`); return; }
+      if (!densites[i])      { toast.error(`⚠️ Masse ${i+1} : densité manquante`); return; }
+    }
+    if (!asymmetry) {
+      toast.error("⚠️ Veuillez indiquer si une asymétrie est présente (Oui/Non)");
+      return;
+    }
+    if (!distortion) {
+      toast.error("⚠️ Veuillez indiquer si une distorsion architecturale est présente (Oui/Non)");
+      return;
+    }
+    if (!calcifications) {
+      toast.error("⚠️ Veuillez indiquer si des calcifications sont présentes (Oui/Non)");
+      return;
+    }
+    if (calcifications === "oui" && !typeCalcification) {
+      toast.error("⚠️ Veuillez sélectionner le type de calcifications (bénigne/suspecte)");
+      return;
+    }
     const massesMammographie = localisations.map((localisation, index) => ({
       localisation,
       sein: seins[index] || "gauche",

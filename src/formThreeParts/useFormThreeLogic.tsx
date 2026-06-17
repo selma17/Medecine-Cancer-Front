@@ -88,6 +88,7 @@ export const transformScanDataForReport = (scan: any, clientDetails?: any) => {
         masses: scan.massesEchostructure?.map((m: any) => ({
           localisation:   m.localisation,
           distanceCentre: m.distanceCentre,
+          rayonHoraire:   m.rayonHoraire || "",
           mesure:         m.mesure,
           forme:          m.forme,
           contours:       m.contours,

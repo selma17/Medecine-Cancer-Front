@@ -19,6 +19,7 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [orientations, setOrientations] = useState<string[]>([]);
   const [comportements, setComportements] = useState<string[]>([]);
   const [calcifications, setCalcifications] = useState<string[]>([]);
+  const [rayonsHoraires, setRayonsHoraires] = useState<string[]>([]);
   const [echostructureMammaire, setEchostructureMammaire] = useState<string>("");
   const [signesAssocies, setSignesAssocies] = useState<string[]>([]);
   const [signesLocalisations, setSignesLocalisations] = useState<{ [key: string]: string }>({});
@@ -53,6 +54,9 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
   const handleMesureChange = (index: number, value: string) =>
     setMesures((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
+
+  const handleRayonHoraireChange = (index: number, value: string) =>
+    setRayonsHoraires((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
 
   const handleMassesDataChange = (
     index: number,
@@ -96,6 +100,7 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
     const massesEchographie = localisations.map((localisation, index) => ({
       localisation: localisation || "",
       distanceCentre: distancesCentre[index] || "",
+      rayonHoraire: rayonsHoraires[index] || "",
       sein: seins[index] || "gauche",
       mesure: mesures[index] || "",
       forme: formes[index] || "",
@@ -209,6 +214,8 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
     handleDistanceCentreChange,
     handleSeinChange,
     handleMesureChange,
+    handleRayonHoraireChange,
+    rayonsHoraires,
     handleMassesDataChange,
     handleSignesAssociesChange,
     handleSigneLocalisationChange,

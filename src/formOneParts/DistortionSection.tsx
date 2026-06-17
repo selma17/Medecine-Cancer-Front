@@ -72,13 +72,13 @@ const DistortionSection: React.FC<Props> = ({
                   </label>
                   {hoveredOption === option && distortionImages[option] && (
                     <div style={{
-                      position: "absolute", top: "100%", left: 0, zIndex: 100,
+                      position: "absolute", top: 0, left: "calc(100% + 12px)", zIndex: 100,
                       background: "white", border: "1px solid #e2e8f0",
                       borderRadius: "8px", padding: "6px",
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.15)", marginTop: "4px"
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
                     }}>
                       <img src={distortionImages[option]} alt={option}
-                        style={{ width: "160px", height: "120px", objectFit: "cover", borderRadius: "4px" }}
+                        style={{ width: "220px", height: "180px", objectFit: "cover", borderRadius: "4px" }}
                       />
                       <p style={{ fontSize: "11px", color: "#1B2B6B", textAlign: "center", margin: "4px 0 0", fontWeight: "600" }}>
                         {option}

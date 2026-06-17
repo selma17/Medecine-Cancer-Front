@@ -4,18 +4,22 @@ import "./BreastSchema.css";
 interface BreastSchemaProps {
   localisation: string;
   distanceCentre: string;
+  rayonHoraire: string;
   sein: "gauche" | "droite";
   onLocalisationChange: (value: string) => void;
   onDistanceCentreChange: (value: string) => void;
+  onRayonHoraireChange: (value: string) => void;
   onSeinChange: (value: "gauche" | "droite") => void;
 }
 
 const BreastSchema: React.FC<BreastSchemaProps> = ({
   localisation,
   distanceCentre,
+  rayonHoraire,
   sein,
   onLocalisationChange,
   onDistanceCentreChange,
+  onRayonHoraireChange,
   onSeinChange,
 }) => {
   // Fonction pour calculer la position de la masse selon l'horloge et la distance
@@ -34,74 +38,72 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
     // Min 8px pour rester visible, max breastRadius-6 pour rester dans le cercle
     const adjustedDistance = Math.min(Math.max(distanceNum * scale, 8), breastRadius - 6);
 
-    // ── 1) Essayer le format horaire (ex: "2H", "10H", "2") ──
-    const hourMatch = localisation.match(/(\d+)\s*H?/i);
-    let angleDeg: number | null = null;
+    // Extraire l'heure de la localisation (ex: "2H" ou "2" -> 2)
+    const hourMatch = localisation.match(/(\d+)H?/);
+    if (!hourMatch) return {};
 
-    if (hourMatch) {
-      const hour = parseInt(hourMatch[1]);
-      if (hour >= 1 && hour <= 12) {
-        // Chaque heure = 30° dans le sens horaire depuis 12H
-        angleDeg = hour * 30;
+    const hour = parseInt(hourMatch[1]);
+
+    // Valider que l'heure est entre 1 et 12
+    if (hour < 1 || hour > 12) return {};
+     
+     // MAPPING DIRECT ET SIMPLE : chaque heure = position fixe avec ajustement de précision
+     let x = 0;
+     let y = 0;
+     
+           switch (hour) {
+        case 12: // 12H = haut
+          x = 0;
+          y = -adjustedDistance;
+          break;
+        case 1: // 1H = haut-droite
+          x = adjustedDistance * 0.5;
+          y = -adjustedDistance * 0.87;
+          break;
+        case 2: // 2H = haut-droite
+          x = adjustedDistance * 0.87;
+          y = -adjustedDistance * 0.5;
+          break;
+        case 3: // 3H = droite
+          x = adjustedDistance;
+          y = 0;
+          break;
+        case 4: // 4H = bas-droite
+          x = adjustedDistance * 0.87;
+          y = adjustedDistance * 0.5;
+          break;
+        case 5: // 5H = bas-droite
+          x = adjustedDistance * 0.5;
+          y = adjustedDistance * 0.87;
+          break;
+        case 6: // 6H = bas
+          x = 0;
+          y = adjustedDistance;
+          break;
+        case 7: // 7H = bas-gauche
+          x = -adjustedDistance * 0.5;
+          y = adjustedDistance * 0.87;
+          break;
+        case 8: // 8H = bas-gauche
+          x = -adjustedDistance * 0.87;
+          y = adjustedDistance * 0.5;
+          break;
+        case 9: // 9H = gauche
+          x = -adjustedDistance;
+          y = 0;
+          break;
+        case 10: // 10H = haut-gauche
+          x = -adjustedDistance * 0.87;
+          y = -adjustedDistance * 0.5;
+          break;
+        case 11: // 11H = haut-gauche
+          x = -adjustedDistance * 0.5;
+          y = -adjustedDistance * 0.87;
+          break;
+        default:
+          x = 0;
+          y = 0;
       }
-    }
-
-    // ── 2) Essayer le format quadrant (QSE, QSEG, QII, UQE, RA, etc.) ──
-    if (angleDeg === null) {
-      const loc = localisation.trim().toUpperCase().replace(/\s+/g, "");
-      // Mapping des quadrants vers l'angle central (degrés depuis 12H, sens horaire)
-      const quadrantMap: { [key: string]: number } = {
-        // Quadrants principaux (centre du quadrant)
-        QSE: 45,    // Supéro-Externe → entre 12H et 3H
-        QSEG: 45,
-        QSED: 45,
-        QSI: 315,   // Supéro-Interne → entre 9H et 12H
-        QSIG: 315,
-        QSID: 315,
-        QIE: 135,   // Inféro-Externe → entre 3H et 6H
-        QIEG: 135,
-        QIED: 135,
-        QII: 225,   // Inféro-Interne → entre 6H et 9H
-        QIIG: 225,
-        QIID: 225,
-        // Unions de quadrants (axe central)
-        UQE: 90,    // Union Quadrants Externes → 3H
-        UQEG: 90,
-        UQED: 90,
-        UQI: 270,   // Union Quadrants Internes → 9H
-        UQIG: 270,
-        UQID: 270,
-        UQS: 0,     // Union Quadrants Supérieurs → 12H
-        UQSG: 0,
-        UQSD: 0,
-        UQINF: 180, // Union Quadrants Inférieurs → 6H
-        // Rétro-aréolaire → centre
-        RA: -1,
-        RAG: -1,
-        RAD: -1,
-      };
-
-      if (loc in quadrantMap) {
-        angleDeg = quadrantMap[loc];
-      }
-    }
-
-    // Aucun format reconnu
-    if (angleDeg === null) return {};
-
-    // Cas spécial rétro-aréolaire : point très proche du centre
-    let x: number;
-    let y: number;
-
-    if (angleDeg === -1) {
-      x = 0;
-      y = 0;
-    } else {
-      // Conversion degrés → radians (0° = 12H, sens horaire)
-      const rad = (angleDeg * Math.PI) / 180;
-      x = Math.sin(rad) * adjustedDistance;
-      y = -Math.cos(rad) * adjustedDistance;
-    }
     
     // Pour le sein droit, le système d'horloge est en miroir (x inversé)
     const finalX = seinConcerne === "droite" ? -x : x;
@@ -218,7 +220,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
       <div className="localisation-inputs">
         <div className="input-group">
           <label className="form-label">
-            Localisation (ex: 2H, 10H, etc.)
+            Localisation
             <span className="text-red-500 ml-1">*</span>
           </label>
           <input
@@ -229,14 +231,24 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             placeholder="Ex: 2H, 10H, QSE, QSEG"
             required
           />
-          <small className="text-muted">
-            Système d'horloge (2H, 10H…) ou quadrant (QSE, QSI, QIE, QII, UQE, RA…)
-          </small>
         </div>
         
         <div className="input-group">
           <label className="form-label">
-            Distance du centre (mm)
+            Rayon horaire
+          </label>
+          <input
+            type="text"
+            value={rayonHoraire}
+            onChange={(e) => onRayonHoraireChange(e.target.value)}
+            className="form-input"
+            placeholder="Ex: 2H, 10H"
+          />
+        </div>
+
+        <div className="input-group">
+          <label className="form-label">
+            Distance par rapport au mamelon (mm)
           </label>
           <input
             type="number"
@@ -247,9 +259,6 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             min="0"
             step="1"
           />
-          <small className="text-muted">
-            Distance mesurée depuis le centre du mamelon
-          </small>
         </div>
       </div>
       

@@ -51,6 +51,7 @@ interface MedicalReportProps {
         comportement: string;
         calcifications: string;
         distanceCentre?: string;
+        rayonHoraire?: string;
         sein?: string;
       }>;
       signesAssocies?: Array<{ nom: string; localisation?: string }> | string[];
@@ -514,8 +515,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
         doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(27, 43, 107);
         doc.text(`Masses détectées (${echoMasses.length})`, margin + 3, y + 4);
         y += 6;
-        const cols2 = [10, 16, 16, 16, 16, 16, 16, 18, 18, 18, 0];
-        const heads2 = ["N°", "Sein", "Loc.", "Rayon H.", "Dist.mam.", "Mesure", "Forme", "Contours", "Écho.", "Orient.", ""];
+        const cols2 = [10, 14, 14, 14, 14, 16, 16, 16, 18, 18, 0];
+        const heads2 = ["N°", "Loc.", "Rayon H.", "Sein", "Mesure", "Dist.mam.", "Forme", "Contours", "Écho.", "Orient.", ""];
         let xc2 = margin;
         doc.setFillColor(27, 43, 107);
         doc.rect(margin, y, contentW, 5, "F");
@@ -530,7 +531,7 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
           doc.setDrawColor(220, 220, 220);
           doc.rect(margin, y, contentW, 5, "S");
           doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
-          const cells2 = [`${i+1}`, m.sein||"—", m.localisation||"—", m.localisation||"—", m.distanceCentre ? `${m.distanceCentre}mm` : "—", m.mesure ? `${m.mesure}mm` : "—", m.forme||"—", m.contours||"—", m.densite||"—", m.orientation||"—", ""];
+          const cells2 = [`${i+1}`, m.localisation||"—", m.rayonHoraire||"—", m.sein||"—", m.mesure ? `${m.mesure}mm` : "—", m.distanceCentre ? `${m.distanceCentre}mm` : "—", m.forme||"—", m.contours||"—", m.densite||"—", m.orientation||"—", ""];
           cells2.forEach((c, ci) => { doc.text(c, xc2 + 1, y + 3.5); xc2 += cols2[ci]; });
           y += 5;
         });
@@ -1197,9 +1198,9 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                             <th>Masse n°</th>
                             <th>Localisation</th>
                             <th>Rayon horaire</th>
-                            <th>Dist. mamelon</th>
                             <th>Sein</th>
                             <th>Mesure</th>
+                            <th>Dist. mamelon</th>
                             <th>Forme</th>
                             <th>Contours</th>
                             <th>Échostructure</th>
@@ -1212,10 +1213,10 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                             <tr key={i}>
                               <td>{i + 1}</td>
                               <td>{masse.localisation || "—"}</td>
-                              <td>{masse.localisation || "—"}</td>
-                              <td>{masse.distanceCentre ? `${masse.distanceCentre} mm` : "—"}</td>
+                              <td>{masse.rayonHoraire || "—"}</td>
                               <td>{masse.sein || "—"}</td>
                               <td>{masse.mesure ? `${masse.mesure} mm` : "—"}</td>
+                              <td>{masse.distanceCentre ? `${masse.distanceCentre} mm` : "—"}</td>
                               <td>{masse.forme || "—"}</td>
                               <td>{masse.contours || "—"}</td>
                               <td>{masse.densite || "—"}</td>

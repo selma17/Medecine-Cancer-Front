@@ -225,6 +225,7 @@ const FormTwo: React.FC = () => {
                   index={index}
                   localisation={logic.localisations[index] || ""}
                   distanceCentre={logic.distancesCentre[index] || ""}
+                  rayonHoraire={logic.rayonsHoraires?.[index] || ""}
                   sein={logic.seins[index] || "gauche"}
                   mesure={logic.mesures[index] || ""}
                   forme={logic.formes[index] || ""}
@@ -235,6 +236,7 @@ const FormTwo: React.FC = () => {
                   calcification={logic.calcifications[index] || ""}
                   onLocalisationChange={logic.handleLocalisationChange}
                   onDistanceCentreChange={logic.handleDistanceCentreChange}
+                  onRayonHoraireChange={logic.handleRayonHoraireChange}
                   onSeinChange={logic.handleSeinChange}
                   onMesureChange={logic.handleMesureChange}
                   onMassesDataChange={logic.handleMassesDataChange}

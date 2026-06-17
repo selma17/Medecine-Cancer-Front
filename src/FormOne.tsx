@@ -103,6 +103,7 @@ const FormOne: React.FC = () => {
         }
         .form1-card-body .checkbox-label:hover { border-color: #1B2B6B; background: #EEF2F7; }
         .form1-card-body .checkbox-label input { accent-color: #1B2B6B; }
+        .form1-card-body .checkbox-label input { accent-color: #1B2B6B; }
         .form1-card-body .radio-label {
           display: flex; align-items: center; gap: 8px;
           padding: 8px 14px; border: 1px solid #e2e8f0;
@@ -110,6 +111,7 @@ const FormOne: React.FC = () => {
           color: #1e293b; transition: all 0.15s; background: white;
         }
         .form1-card-body .radio-label:hover { border-color: #1B2B6B; background: #EEF2F7; }
+        .form1-card-body .radio-label input { accent-color: #1B2B6B; }
         .form1-card-body .text-input {
           width: 100%; padding: 10px 14px;
           border: 1px solid #e2e8f0; border-radius: 8px;
