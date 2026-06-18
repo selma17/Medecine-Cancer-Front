@@ -141,7 +141,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
           </div>
         </div>
 
-        {/* Sein gauche (affiché à droit — vue de face, convention anatomique) */}
+        {/* Sein gauche (affiché à droite — vue de face, convention anatomique) */}
         <div className={`breast-schema-wrapper ${sein === "gauche" ? "active" : ""}`}>
           <div className="breast-outline breast-left">
             <div className="breast-label">Gauche</div>

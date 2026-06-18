@@ -735,7 +735,9 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
     return Array.from(s);
   })();
 
-  const seinUnique = seinsAvecMasses.length === 1;
+  // Nombre de seins classés (pour layout conclusion)
+  const seinsClasses = [acrDroit, acrGauche].filter(Boolean).length;
+  const seinUnique = seinsClasses === 1;
 
   // Toutes les masses (mammo + écho) DÉDUPLIQUÉES par sein+localisation
   // (mammo et écho décrivent les MÊMES lésions → ne pas les compter en double)
@@ -1326,8 +1328,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
 
               {(acrDroit || acrGauche) ? (
                 <div className={seinUnique ? "mr-conclusion-single" : "mr-conclusion-grid"}>
-                  {/* Sein droit — seulement si anomalie */}
-                  {seinsAvecMasses.includes("droit") && acrDroit && (
+                  {/* Sein droit — seulement si classé */}
+                  {acrDroit && (
                     <div className="mr-sein-card">
                       <div className="mr-sein-card-header">Sein Droit</div>
                       <div className="mr-sein-card-body">
@@ -1345,8 +1347,8 @@ const MedicalReport: React.FC<MedicalReportProps> = ({ isOpen, onClose, scanData
                     </div>
                   )}
 
-                  {/* Sein gauche — seulement si anomalie */}
-                  {seinsAvecMasses.includes("gauche") && acrGauche && (
+                  {/* Sein gauche — seulement si classé */}
+                  {acrGauche && (
                     <div className="mr-sein-card">
                       <div className="mr-sein-card-header">Sein Gauche</div>
                       <div className="mr-sein-card-body">

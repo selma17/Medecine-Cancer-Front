@@ -49,12 +49,11 @@ const FormThree: React.FC = () => {
   // ── Détermine si on a des résultats par sein ─────────────────────────────
   const hasPerBreast = !!(acrDroit || acrGauche);
 
-  // Seins qui ont effectivement des masses (depuis scanData)
-  const seinsActifs: string[] = scanData?.resultats?.seinsAvecMasses || (
-    acrDroit && acrGauche ? ["droit", "gauche"] :
-    acrDroit ? ["droit"] :
-    acrGauche ? ["gauche"] : ["droit", "gauche"]
-  );
+  // Seins qui ont un score ACR (pas seulement ceux avec masses)
+  const seinsActifs: string[] = [
+    ...(acrDroit ? ["droit"] : []),
+    ...(acrGauche ? ["gauche"] : []),
+  ];
 
 
   // ── Carte sein : normal vs pathologique ─────────────────────────────────
@@ -257,15 +256,6 @@ const FormThree: React.FC = () => {
                         {seinsActifs.includes("gauche") && (
                           <SeinCard label="Sein Gauche" acr={acrGauche} reco={recommandationGauche} />
                         )}
-                      </div>
-
-                      {/* Score global */}
-                      <div style={{ background: "#F1F5F9", borderRadius: "10px", padding: "10px 14px", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px", border: "1px solid #e2e8f0" }}>
-                        <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>Score global :</span>
-                        <span style={{ background: getAcrColor(acrScore), color: "white", borderRadius: "6px", padding: "2px 10px", fontWeight: "700", fontSize: "13px" }}>
-                          ACR {acrScore}
-                        </span>
-                        <span style={{ fontSize: "12px", color: "#475569" }}>{conduiteIA}</span>
                       </div>
                     </>
                   ) : (
