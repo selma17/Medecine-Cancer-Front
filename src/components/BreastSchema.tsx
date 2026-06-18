@@ -5,11 +5,11 @@ interface BreastSchemaProps {
   localisation: string;
   distanceCentre: string;
   rayonHoraire: string;
-  sein: "gauche" | "droite";
+  sein: "gauche" | "droit";
   onLocalisationChange: (value: string) => void;
   onDistanceCentreChange: (value: string) => void;
   onRayonHoraireChange: (value: string) => void;
-  onSeinChange: (value: "gauche" | "droite") => void;
+  onSeinChange: (value: "gauche" | "droit") => void;
 }
 
 const BreastSchema: React.FC<BreastSchemaProps> = ({
@@ -24,7 +24,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
 }) => {
   // Fonction pour calculer la position de la masse selon l'horloge et la distance
   // rayonHoraireOverride : si fourni, utilisé en priorité pour l'angle
-  const calculateMassPosition = (loc: string, distance: string, seinConcerne: "gauche" | "droite" = "gauche", rayonHoraireOverride?: string) => {
+  const calculateMassPosition = (loc: string, distance: string, seinConcerne: "gauche" | "droit" = "gauche", rayonHoraireOverride?: string) => {
     const effectiveLoc = (rayonHoraireOverride || loc || "").trim();
     if (!effectiveLoc || !distance) return {};
     
@@ -65,7 +65,8 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
       y = -Math.cos(rad) * adjustedDistance;
     }
     
-    const finalX = seinConcerne === "droite" ? -x : x;
+    // Pas de miroir — les deux seins utilisent le même système de coordonnées
+    const finalX = x;
 
     return {
       position: 'absolute' as const,
@@ -84,7 +85,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
   };
 
   const handleSeinChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onSeinChange(e.target.value as "gauche" | "droite");
+    onSeinChange(e.target.value as "gauche" | "droit");
   };
 
   return (
@@ -102,12 +103,45 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
           required
         >
           <option value="gauche">Sein gauche</option>
-          <option value="droite">Sein droit</option>
+          <option value="droit">Sein droit</option>
         </select>
       </div>
 
       <div className="breasts-container">
-        {/* Sein gauche */}
+        {/* Sein droit (affiché à gauche — vue de face, convention anatomique) */}
+        <div className={`breast-schema-wrapper ${sein === "droit" ? "active" : ""}`}>
+          <div className="breast-outline breast-right">
+            <div className="breast-label">Droite</div>
+            {/* Ligne 12H */}
+            <div className="clock-line vertical-line-12"></div>
+            <span className="clock-label clock-12">12H</span>
+            
+            {/* Ligne 6H */}
+            <div className="clock-line vertical-line-6"></div>
+            <span className="clock-label clock-6">6H</span>
+            
+            {/* Ligne 3H */}
+            <div className="clock-line horizontal-line-3"></div>
+            <span className="clock-label clock-3">3H</span>
+            
+            {/* Ligne 9H */}
+            <div className="clock-line horizontal-line-9"></div>
+            <span className="clock-label clock-9">9H</span>
+            
+            {/* Centre (mamelon) */}
+            <div className="nipple-center"></div>
+            
+            {(localisation || rayonHoraire) && sein === "droit" && distanceCentre && (
+               <div 
+                 className="mass-indicator" 
+                 title={`${rayonHoraire || localisation} - ${distanceCentre}mm`}
+                 style={calculateMassPosition(localisation, distanceCentre, "droit", rayonHoraire)}
+               ></div>
+             )}
+          </div>
+        </div>
+
+        {/* Sein gauche (affiché à droit — vue de face, convention anatomique) */}
         <div className={`breast-schema-wrapper ${sein === "gauche" ? "active" : ""}`}>
           <div className="breast-outline breast-left">
             <div className="breast-label">Gauche</div>
@@ -130,46 +164,11 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             {/* Centre (mamelon) */}
             <div className="nipple-center"></div>
             
-                         {/* Indicateur de masse si localisation est définie et sein gauche sélectionné */}
             {(localisation || rayonHoraire) && sein === "gauche" && distanceCentre && (
                <div 
                  className="mass-indicator" 
                  title={`${rayonHoraire || localisation} - ${distanceCentre}mm`}
                  style={calculateMassPosition(localisation, distanceCentre, "gauche", rayonHoraire)}
-               ></div>
-             )}
-          </div>
-        </div>
-
-        {/* Sein droit */}
-        <div className={`breast-schema-wrapper ${sein === "droite" ? "active" : ""}`}>
-          <div className="breast-outline breast-right">
-            <div className="breast-label">Droite</div>
-            {/* Ligne 12H */}
-            <div className="clock-line vertical-line-12"></div>
-            <span className="clock-label clock-12">12H</span>
-            
-            {/* Ligne 6H */}
-            <div className="clock-line vertical-line-6"></div>
-            <span className="clock-label clock-6">6H</span>
-            
-            {/* Ligne 3H */}
-            <div className="clock-line horizontal-line-3"></div>
-            <span className="clock-label clock-3">3H</span>
-            
-            {/* Ligne 9H */}
-            <div className="clock-line horizontal-line-9"></div>
-            <span className="clock-label clock-9">9H</span>
-            
-            {/* Centre (mamelon) */}
-            <div className="nipple-center"></div>
-            
-                         {/* Indicateur de masse si localisation est définie et sein droit sélectionné */}
-            {(localisation || rayonHoraire) && sein === "droite" && distanceCentre && (
-               <div 
-                 className="mass-indicator" 
-                 title={`${rayonHoraire || localisation} - ${distanceCentre}mm`}
-                 style={calculateMassPosition(localisation, distanceCentre, "droite", rayonHoraire)}
                ></div>
              )}
           </div>

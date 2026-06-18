@@ -8,7 +8,7 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
   const [selected, setSelected] = useState<string[]>([]);
   const [massNumber, setMassNumber] = useState<string>("");
   const [localisations, setLocalisations] = useState<string[]>([]);
-  const [seins, setSeins] = useState<("gauche" | "droite")[]>([]);
+  const [seins, setSeins] = useState<("gauche" | "droit")[]>([]);
   const [asymmetry, setAsymmetry] = useState<string>("");
   const [asymmetryDetails, setAsymmetryDetails] = useState<string[]>([]);
   const [asymmetryLocalisation, setAsymmetryLocalisation] = useState<string>("");
@@ -40,7 +40,7 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
     setLocalisations((prev) => { const u = [...prev]; u[index] = value; return u; });
   };
 
-  const handleSeinChange = (index: number, value: "gauche" | "droite") => {
+  const handleSeinChange = (index: number, value: "gauche" | "droit") => {
     setSeins((prev) => { const u = [...prev]; u[index] = value; return u; });
   };
 
@@ -143,11 +143,8 @@ export const useFormOneLogic = (navigate: (path: string) => void) => {
       toast.error("⚠️ Veuillez sélectionner la densité mammaire");
       return;
     }
-    if (!massNumber || Number(massNumber) <= 0) {
-      toast.error("⚠️ Veuillez indiquer le nombre de masses");
-      return;
-    }
-    const nbMasses = Number(massNumber);
+    // Masses optionnelles — mais si présentes, tous les champs requis
+    const nbMasses = Number(massNumber) || 0;
     for (let i = 0; i < nbMasses; i++) {
       if (!localisations[i]) { toast.error(`⚠️ Masse ${i+1} : localisation manquante`); return; }
       if (!formes[i])        { toast.error(`⚠️ Masse ${i+1} : forme manquante`); return; }

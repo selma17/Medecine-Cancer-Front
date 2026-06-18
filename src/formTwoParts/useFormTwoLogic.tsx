@@ -11,7 +11,7 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const [nombreMasse, setNombreMasse] = useState<number | "">("");
   const [localisations, setLocalisations] = useState<string[]>([]);
   const [distancesCentre, setDistancesCentre] = useState<string[]>([]);
-  const [seins, setSeins] = useState<("gauche" | "droite")[]>([]);
+  const [seins, setSeins] = useState<("gauche" | "droit")[]>([]);
   const [mesures, setMesures] = useState<string[]>([]);
   const [formes, setFormes] = useState<string[]>([]);
   const [contours, setContours] = useState<string[]>([]);
@@ -49,7 +49,7 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const handleDistanceCentreChange = (index: number, value: string) =>
     setDistancesCentre((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
 
-  const handleSeinChange = (index: number, value: "gauche" | "droite") =>
+  const handleSeinChange = (index: number, value: "gauche" | "droit") =>
     setSeins((prev) => { const arr = [...prev]; arr[index] = value; return arr; });
 
   const handleMesureChange = (index: number, value: string) =>
@@ -92,12 +92,9 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
   const handleEchostructureChange = (value: string) => setEchostructureMammaire(value);
 
   const handleNextClick = async () => {
-    if (!nombreMasse || nombreMasse === 0) {
-      toast.error("⚠️ Veuillez définir le nombre de masses échographiques");
-      return;
-    }
+    const nbMasses = Number(nombreMasse) || 0;
 
-    const massesEchographie = localisations.map((localisation, index) => ({
+    const massesEchographie = localisations.slice(0, nbMasses).map((localisation, index) => ({
       localisation: localisation || "",
       distanceCentre: distancesCentre[index] || "",
       rayonHoraire: rayonsHoraires[index] || "",
@@ -111,13 +108,16 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
       calcifications: calcifications[index] || "",
     }));
 
-    const hasEchographieData = massesEchographie.some(
-      masse => masse.localisation && masse.forme && masse.contours && masse.densite
-    );
-
-    if (!hasEchographieData) {
-      toast.error("⚠️ Veuillez remplir au moins une masse échographique complète");
-      return;
+    // Masses optionnelles — mais si présentes, champs requis
+    if (nbMasses > 0) {
+      const incomplete = massesEchographie.find(
+        (m) => !m.localisation || !m.forme || !m.contours || !m.densite
+      );
+      if (incomplete) {
+        const idx = massesEchographie.indexOf(incomplete) + 1;
+        toast.error(`⚠️ Masse ${idx} : remplissez localisation, forme, contours et échostructure`);
+        return;
+      }
     }
 
     if (!echostructureMammaire) {
@@ -173,7 +173,7 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
       client: { id: clientId || null },
 
       massesMammographie:  formOneData.massesMammographie?.length ? formOneData.massesMammographie : null,
-      massesEchostructure: massesEchographie,
+      massesEchostructure: nbMasses > 0 ? massesEchographie : null,
     };
 
     try {

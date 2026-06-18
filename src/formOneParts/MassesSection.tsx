@@ -4,9 +4,9 @@ interface Props {
   massNumber: string;
   setMassNumber: (value: string) => void;
   localisations: string[];
-  seins: ("gauche" | "droite")[];
+  seins: ("gauche" | "droit")[];
   handleLocalisationChange: (index: number, value: string) => void;
-  handleSeinChange: (index: number, value: "gauche" | "droite") => void;
+  handleSeinChange: (index: number, value: "gauche" | "droit") => void;
   formes: string[];
   contours: string[];
   densites: string[];
@@ -89,11 +89,11 @@ const MassesSection: React.FC<Props> = ({
           <div className="content">
             <p className="title">Sein</p>
             <div className="options">
-              {["gauche", "droite"].map((s) => (
+              {["gauche", "droit"].map((s) => (
                 <label key={s} className="checkbox-label">
                   <input type="radio" name={`sein-${index}`}
                     checked={seins[index] === s}
-                    onChange={() => handleSeinChange(index, s as "gauche" | "droite")}
+                    onChange={() => handleSeinChange(index, s as "gauche" | "droit")}
                   />
                   {s}
                 </label>

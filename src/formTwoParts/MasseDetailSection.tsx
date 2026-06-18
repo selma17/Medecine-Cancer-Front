@@ -6,7 +6,7 @@ interface Props {
   localisation: string;
   distanceCentre: string;
   rayonHoraire: string;
-  sein: "gauche" | "droite";
+  sein: "gauche" | "droit";
   mesure: string;
   forme: string;
   contour: string;
@@ -17,7 +17,7 @@ interface Props {
   onLocalisationChange: (index: number, value: string) => void;
   onDistanceCentreChange: (index: number, value: string) => void;
   onRayonHoraireChange: (index: number, value: string) => void;
-  onSeinChange: (index: number, value: "gauche" | "droite") => void;
+  onSeinChange: (index: number, value: "gauche" | "droit") => void;
   onMesureChange: (index: number, value: string) => void;
   onMassesDataChange: (
     index: number,
