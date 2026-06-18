@@ -48,7 +48,7 @@ const FormTwo: React.FC = () => {
           background: white;
           border-radius: 16px;
           border: 1px solid #e2e8f0;
-          overflow: hidden;
+          overflow: visible;
           margin-bottom: 1.5rem;
         }
         .form2-card-header {
@@ -57,6 +57,7 @@ const FormTwo: React.FC = () => {
           display: flex;
           align-items: center;
           gap: 12px;
+          border-radius: 16px 16px 0 0;
         }
         .form2-card-body { padding: 1.75rem; }
         .form2-footer {

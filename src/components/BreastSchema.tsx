@@ -13,101 +13,58 @@ interface BreastSchemaProps {
 }
 
 const BreastSchema: React.FC<BreastSchemaProps> = ({
-    localisation,
-    distanceCentre,
-    rayonHoraire,
-    sein,
-    onLocalisationChange,
-    onDistanceCentreChange,
-    onRayonHoraireChange,
-    onSeinChange,
+  localisation,
+  distanceCentre,
+  rayonHoraire,
+  sein,
+  onLocalisationChange,
+  onDistanceCentreChange,
+  onRayonHoraireChange,
+  onSeinChange,
 }) => {
   // Fonction pour calculer la position de la masse selon l'horloge et la distance
-  const calculateMassPosition = (localisation: string, distance: string, seinConcerne: "gauche" | "droite" = "gauche") => {
-    if (!localisation || !distance) return {};
+  // rayonHoraireOverride : si fourni, utilisé en priorité pour l'angle
+  const calculateMassPosition = (loc: string, distance: string, seinConcerne: "gauche" | "droite" = "gauche", rayonHoraireOverride?: string) => {
+    const effectiveLoc = (rayonHoraireOverride || loc || "").trim();
+    if (!effectiveLoc || !distance) return {};
     
     const distanceNum = parseFloat(distance);
     if (isNaN(distanceNum) || distanceNum <= 0) return {};
 
-    // Rayon visuel du sein en pixels
     const breastRadius = 80;
-
-    // Distance max représentable = 60mm (bord du sein)
-    // Échelle proportionnelle : 1mm = breastRadius/60 pixels
     const scale = breastRadius / 60;
-    // Min 8px pour rester visible, max breastRadius-6 pour rester dans le cercle
     const adjustedDistance = Math.min(Math.max(distanceNum * scale, 8), breastRadius - 6);
 
-    // ── 1) Essayer le format horaire (ex: "2H", "10H", "2") ──
-    const hourMatch = localisation.match(/(\d+)\s*H?/i);
+    // 1) Essayer le format horaire (ex: "2H", "10H", "2")
     let angleDeg: number | null = null;
-
+    const hourMatch = effectiveLoc.match(/^(\d{1,2})\s*[hH]?$/);
     if (hourMatch) {
       const hour = parseInt(hourMatch[1]);
-      if (hour >= 1 && hour <= 12) {
-        // Chaque heure = 30° dans le sens horaire depuis 12H
-        angleDeg = hour * 30;
-      }
+      if (hour >= 1 && hour <= 12) angleDeg = hour * 30;
     }
 
-    // ── 2) Essayer le format quadrant (QSE, QSEG, QII, UQE, RA, etc.) ──
+    // 2) Essayer le format quadrant (QSE, QSEG, UQE, RA, etc.)
     if (angleDeg === null) {
-      const loc = localisation.trim().toUpperCase().replace(/\s+/g, "");
-      // Mapping des quadrants vers l'angle central (degrés depuis 12H, sens horaire)
-      const quadrantMap: { [key: string]: number } = {
-        // Quadrants principaux (centre du quadrant)
-        QSE: 45,    // Supéro-Externe → entre 12H et 3H
-        QSEG: 45,
-        QSED: 45,
-        QSI: 315,   // Supéro-Interne → entre 9H et 12H
-        QSIG: 315,
-        QSID: 315,
-        QIE: 135,   // Inféro-Externe → entre 3H et 6H
-        QIEG: 135,
-        QIED: 135,
-        QII: 225,   // Inféro-Interne → entre 6H et 9H
-        QIIG: 225,
-        QIID: 225,
-        // Unions de quadrants (axe central)
-        UQE: 90,    // Union Quadrants Externes → 3H
-        UQEG: 90,
-        UQED: 90,
-        UQI: 270,   // Union Quadrants Internes → 9H
-        UQIG: 270,
-        UQID: 270,
-        UQS: 0,     // Union Quadrants Supérieurs → 12H
-        UQSG: 0,
-        UQSD: 0,
-        UQINF: 180, // Union Quadrants Inférieurs → 6H
-        // Rétro-aréolaire → centre
-        RA: -1,
-        RAG: -1,
-        RAD: -1,
+      const u = effectiveLoc.toUpperCase().replace(/\s+/g, "");
+      const qMap: { [k: string]: number } = {
+        QSE:45, QSEG:45, QSED:45, QSI:315, QSIG:315, QSID:315,
+        QIE:135, QIEG:135, QIED:135, QII:225, QIIG:225, QIID:225,
+        UQE:90, UQEG:90, UQED:90, UQI:270, UQIG:270, UQID:270,
+        UQS:0, UQSG:0, UQSD:0, UQINF:180, RA:-1, RAG:-1, RAD:-1,
       };
-
-      if (loc in quadrantMap) {
-        angleDeg = quadrantMap[loc];
-      }
+      if (u in qMap) angleDeg = qMap[u];
     }
 
-    // Aucun format reconnu
     if (angleDeg === null) return {};
 
-    // Cas spécial rétro-aréolaire : point très proche du centre
-    let x: number;
-    let y: number;
-
-    if (angleDeg === -1) {
-      x = 0;
-      y = 0;
-    } else {
-      // Conversion degrés → radians (0° = 12H, sens horaire)
+    let x: number, y: number;
+    if (angleDeg === -1) { x = 0; y = 0; }
+    else {
       const rad = (angleDeg * Math.PI) / 180;
       x = Math.sin(rad) * adjustedDistance;
       y = -Math.cos(rad) * adjustedDistance;
     }
     
-    // Pour le sein droit, le système d'horloge est en miroir (x inversé)
     const finalX = seinConcerne === "droite" ? -x : x;
 
     return {
@@ -174,11 +131,11 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             <div className="nipple-center"></div>
             
                          {/* Indicateur de masse si localisation est définie et sein gauche sélectionné */}
-             {localisation && sein === "gauche" && distanceCentre && (
+            {(localisation || rayonHoraire) && sein === "gauche" && distanceCentre && (
                <div 
                  className="mass-indicator" 
-                 title={`${localisation} - ${distanceCentre}mm`}
-                 style={calculateMassPosition(localisation, distanceCentre, "gauche")}
+                 title={`${rayonHoraire || localisation} - ${distanceCentre}mm`}
+                 style={calculateMassPosition(localisation, distanceCentre, "gauche", rayonHoraire)}
                ></div>
              )}
           </div>
@@ -208,11 +165,11 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             <div className="nipple-center"></div>
             
                          {/* Indicateur de masse si localisation est définie et sein droit sélectionné */}
-             {localisation && sein === "droite" && distanceCentre && (
+            {(localisation || rayonHoraire) && sein === "droite" && distanceCentre && (
                <div 
                  className="mass-indicator" 
-                 title={`${localisation} - ${distanceCentre}mm`}
-                 style={calculateMassPosition(localisation, distanceCentre, "droite")}
+                 title={`${rayonHoraire || localisation} - ${distanceCentre}mm`}
+                 style={calculateMassPosition(localisation, distanceCentre, "droite", rayonHoraire)}
                ></div>
              )}
           </div>
@@ -234,7 +191,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             required
           />
         </div>
-
+        
         <div className="input-group">
           <label className="form-label">
             Rayon horaire
