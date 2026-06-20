@@ -110,13 +110,15 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
 
     // Masses optionnelles — mais si présentes, champs requis
     if (nbMasses > 0) {
-      const incomplete = massesEchographie.find(
-        (m) => !m.localisation || !m.forme || !m.contours || !m.densite
-      );
-      if (incomplete) {
-        const idx = massesEchographie.indexOf(incomplete) + 1;
-        toast.error(`⚠️ Masse ${idx} : remplissez localisation, forme, contours et échostructure`);
-        return;
+      for (let i = 0; i < nbMasses; i++) {
+        const m = massesEchographie[i];
+        if (!m.localisation)   { toast.error(`⚠️ Masse ${i+1} : localisation manquante`); return; }
+        if (!m.forme)          { toast.error(`⚠️ Masse ${i+1} : forme manquante`); return; }
+        if (!m.contours)       { toast.error(`⚠️ Masse ${i+1} : contours manquants`); return; }
+        if (!m.densite)        { toast.error(`⚠️ Masse ${i+1} : échostructure manquante`); return; }
+        if (!m.orientation)    { toast.error(`⚠️ Masse ${i+1} : orientation manquante`); return; }
+        if (!m.comportementDesFaisceauxUltrasons) { toast.error(`⚠️ Masse ${i+1} : comportement manquant`); return; }
+        if (!m.calcifications) { toast.error(`⚠️ Masse ${i+1} : calcifications manquantes`); return; }
       }
     }
 

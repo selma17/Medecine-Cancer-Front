@@ -202,7 +202,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Orientation */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">Orientation</p>
+        <p className="form-label">Orientation <span className="text-red-500 ml-1">*</span></p> 
         {orientationsData.map((item) => (
           <div key={item.value} style={{ position: "relative" }}
             onMouseEnter={() => setHoveredItem(`orientation-${item.value}`)}
@@ -223,7 +223,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Comportement */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">Comportement</p>
+        <p className="form-label">Comportement <span className="text-red-500 ml-1">*</span></p>
         {comportementsData.map((item) => (
           <div key={item.value} style={{ position: "relative" }}
             onMouseEnter={() => setHoveredItem(`comportement-${item.value}`)}
@@ -244,7 +244,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Calcifications */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">Calcifications</p>
+        <p className="form-label">Calcifications<span className="text-red-500 ml-1">*</span></p>
         {calcificationsEchoData.map((item) => (
           <div key={item.value} style={{ position: "relative" }}
             onMouseEnter={() => setHoveredItem(`calcification-${item.value}`)}
