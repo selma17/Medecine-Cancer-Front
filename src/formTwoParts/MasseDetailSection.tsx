@@ -244,7 +244,7 @@ const MasseDetailSection: React.FC<Props> = ({
 
       {/* Calcifications */}
       <div className="form-radio-section mt-4">
-        <p className="form-label">Calcifications<span className="text-red-500 ml-1">*</span></p>
+        <p className="form-label">Calcifications</p>
         {calcificationsEchoData.map((item) => (
           <div key={item.value} style={{ position: "relative" }}
             onMouseEnter={() => setHoveredItem(`calcification-${item.value}`)}
@@ -254,7 +254,6 @@ const MasseDetailSection: React.FC<Props> = ({
               <input type="radio" name={`calcification-${index}`}
                 checked={calcification === item.value}
                 onChange={() => handleRadioChange("calcification", item.value)}
-                required
               />
               {item.value}
             </label>

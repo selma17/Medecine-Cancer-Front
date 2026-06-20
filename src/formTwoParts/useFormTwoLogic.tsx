@@ -118,8 +118,6 @@ export const useFormTwoLogic = (navigate: ReturnType<typeof useNavigate>) => {
         if (!m.densite)        { toast.error(`⚠️ Masse ${i+1} : échostructure manquante`); return; }
         if (!m.orientation)    { toast.error(`⚠️ Masse ${i+1} : orientation manquante`); return; }
         if (!m.comportementDesFaisceauxUltrasons) { toast.error(`⚠️ Masse ${i+1} : comportement manquant`); return; }
-        if (!m.calcifications) { toast.error(`⚠️ Masse ${i+1} : calcifications manquantes`); return; }
-      }
     }
 
     if (!echostructureMammaire) {
