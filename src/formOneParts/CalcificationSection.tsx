@@ -47,7 +47,7 @@ const distributionOptions: CalcificationItem[] = [
   { value: "régionales", image: "/dist-regional.png" },
   { value: "segmentaires", image: "/dist-segmental.png" },
   { value: "groupées", image: "/dist-groupe.png" },
-  { value: "linéaires", image: "/dist-groupe.png" },
+  { value: "linéaires", image: "/dist-linear.png" },
 ];
 
 const HoverImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
