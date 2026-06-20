@@ -130,6 +130,7 @@ const MasseDetailSection: React.FC<Props> = ({
           }}
           className="form-input"
           placeholder="ex: 15 ou 15x20"
+          required
         />
         <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>
           Entrez un nombre (ex: 15) ou deux dimensions séparées par x (ex: 15x20)
@@ -211,6 +212,7 @@ const MasseDetailSection: React.FC<Props> = ({
               <input type="radio" name={`orientation-${index}`}
                 checked={orientation === item.value}
                 onChange={() => handleRadioChange("orientation", item.value)}
+                required
               />
               {item.value}
             </label>
@@ -231,6 +233,7 @@ const MasseDetailSection: React.FC<Props> = ({
               <input type="radio" name={`comportement-${index}`}
                 checked={comportement === item.value}
                 onChange={() => handleRadioChange("comportement", item.value)}
+                required
               />
               {item.value}
             </label>
@@ -251,6 +254,7 @@ const MasseDetailSection: React.FC<Props> = ({
               <input type="radio" name={`calcification-${index}`}
                 checked={calcification === item.value}
                 onChange={() => handleRadioChange("calcification", item.value)}
+                required
               />
               {item.value}
             </label>

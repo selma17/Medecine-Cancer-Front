@@ -111,7 +111,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
         {/* Sein droit (affiché à gauche — vue de face, convention anatomique) */}
         <div className={`breast-schema-wrapper ${sein === "droit" ? "active" : ""}`}>
           <div className="breast-outline breast-right">
-            <div className="breast-label">Droite</div>
+            <div className="breast-label">Droit</div>
             {/* Ligne 12H */}
             <div className="clock-line vertical-line-12"></div>
             <span className="clock-label clock-12">12H</span>
@@ -201,6 +201,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             onChange={(e) => onRayonHoraireChange(e.target.value)}
             className="form-input"
             placeholder="Ex: 2H, 10H"
+            required
           />
         </div>
 
@@ -216,6 +217,7 @@ const BreastSchema: React.FC<BreastSchemaProps> = ({
             placeholder="Ex: 25"
             min="0"
             step="1"
+            required
           />
         </div>
       </div>
