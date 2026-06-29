@@ -43,15 +43,14 @@ const EchostructureMammaireSection: React.FC<Props> = ({
             {hoveredItem === item.value && (
               <div style={{
                 position: "absolute",
-                top: "100%",
-                left: 0,
+                top: 0,
+                left: "calc(40% + 12px)",
                 zIndex: 100,
                 background: "white",
                 border: "1px solid #e2e8f0",
                 borderRadius: "8px",
                 padding: "6px",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                marginTop: "4px"
               }}>
                 <img src={item.image} alt={item.value}
                   style={{ width: "220px", height: "180px", objectFit: "cover", borderRadius: "4px" }} />
