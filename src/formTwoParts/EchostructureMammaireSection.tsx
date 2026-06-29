@@ -44,7 +44,7 @@ const EchostructureMammaireSection: React.FC<Props> = ({
               <div style={{
                 position: "absolute",
                 top: 0,
-                left: "calc(40% + 12px)",
+                left: "calc(40%)",
                 zIndex: 100,
                 background: "white",
                 border: "1px solid #e2e8f0",
